@@ -1,0 +1,5 @@
+sanic==22.6.2
+motor~=2.5.1
+aiohttp
+pyquery
+python-dotenv
