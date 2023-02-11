@@ -23,21 +23,20 @@ class Scheduler(Spider):
 
     async def country_ip(self):
         col = DB.get_col()
-        async for item in col.find({'status': 1, 'country': ''}).limit(200):
-            url = f"https://api.ip.sb/geoip/{item['_id']}"
-            yield self.request(url=url, callback=self._parse_ip_country, metadata=item, timeout=10)
+        api = 'http://ip-api.com/batch'
+        ip_list = []
+        async for item in col.find({'status': 1, 'country': ''}).limit(50):
+            ip_list.append(item['_id'])
+        yield self.request(api, self._parse_ip_country, json=ip_list, method='POST', timeout=15)
 
-    async def _parse_ip_country(self, response, item):
-        data = await response.text()
-        if 'country_code' not in data:
-            return
-
-        data = ujson.loads(data)
-        country_code = data['country_code']
-        self.logger.info(f"{item['_id']} -> {country_code}")
+    async def _parse_ip_country(self, response, metadata):
+        data = await response.json()
         col = DB.get_col()
-        await col.update_one({'_id': item['_id']}, {'$set': {'country': country_code}})
-        await asyncio.sleep(8)
+        for item in data:
+            ip = item['query']
+            country_code = item['countryCode']
+            self.logger.info(f"{ip} -> {country_code}")
+            await col.update_one({'_id': ip}, {'$set': {'country': country_code}})
 
     async def validate_ip(self):
         col = DB.get_col()
@@ -61,16 +60,16 @@ class Scheduler(Spider):
 
     async def run(self):
         # 获取ip
-        fetch_ip_task = self.start_worker('fetch_ip', 'fetch ip', 3600)
-        self.worker.append(asyncio.ensure_future(fetch_ip_task))
-
-        # 验证ip
-        validate_ip_task = self.start_worker('validate_ip', 'validate ip', 120)
-        self.worker.append(asyncio.ensure_future(validate_ip_task))
-
-        # 删除一天前验证失败
-        self.worker.append(asyncio.ensure_future(self.clean_fail()))
+        # fetch_ip_task = self.start_worker('fetch_ip', 'fetch ip', 3600)
+        # self.worker.append(asyncio.ensure_future(fetch_ip_task))
+        #
+        # # 验证ip
+        # validate_ip_task = self.start_worker('validate_ip', 'validate ip', 120)
+        # self.worker.append(asyncio.ensure_future(validate_ip_task))
+        #
+        # # 删除一天前验证失败
+        # self.worker.append(asyncio.ensure_future(self.clean_fail()))
 
         # 更新ip地区
-        country_ip_task = self.start_worker('country_ip', 'country_ip', 120)
+        country_ip_task = self.start_worker('country_ip', 'country ip', 120)
         self.worker.append(asyncio.ensure_future(country_ip_task))

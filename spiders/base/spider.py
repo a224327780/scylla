@@ -49,7 +49,7 @@ class Spider:
         except asyncio.TimeoutError:
             logger.error(f"<Error: {url} Timeout> ")
         except Exception as e:
-            logger.error(f"<Error: {url} {e} {str(request_config)}>")
+            logger.error(f"<Error: {url} {e}>")
         return None, None
 
     async def fetch(self, url: str, method='GET', **request_config):
