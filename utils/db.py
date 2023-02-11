@@ -9,14 +9,14 @@ class DB:
     col = None
 
     @classmethod
-    def init_db(cls, loop, db_name, col_name):
+    def init_db(cls, loop, db_name, col_name='scylla'):
         mongo_uri = os.getenv('MONGO_URI')
         cls.client: AsyncIOMotorClient = AsyncIOMotorClient(mongo_uri, io_loop=loop)
         cls.db = cls.client[db_name]
         cls.col = cls.db[col_name]
 
     @classmethod
-    def get_col(cls, col_name=None):
+    def get_col(cls, col_name='scylla'):
         return cls.db[col_name] if col_name else cls.col
 
     @classmethod
