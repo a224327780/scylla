@@ -15,8 +15,8 @@ class Scheduler(Spider):
         async for (name, extractor) in get_extractors():
             urls = await extractor.urls()
             for url in urls:
-                if '89ip' not in url:
-                    continue
+                # if '89ip' not in url:
+                #     continue
                 yield self.request(url=url, callback=FetchIpJob.parse_ip, metadata=extractor, timeout=10)
 
     async def country_ip(self):
