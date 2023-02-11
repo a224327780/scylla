@@ -60,16 +60,16 @@ class Scheduler(Spider):
 
     async def run(self):
         # 获取ip
-        # fetch_ip_task = self.start_worker('fetch_ip', 'fetch ip', 3600)
-        # self.worker.append(asyncio.ensure_future(fetch_ip_task))
-        #
-        # # 验证ip
-        # validate_ip_task = self.start_worker('validate_ip', 'validate ip', 120)
-        # self.worker.append(asyncio.ensure_future(validate_ip_task))
-        #
-        # # 删除一天前验证失败
-        # self.worker.append(asyncio.ensure_future(self.clean_fail()))
+        fetch_ip_task = self.start_worker('fetch_ip', 'fetch ip', 3600)
+        self.worker.append(asyncio.ensure_future(fetch_ip_task))
+
+        # 验证ip
+        validate_ip_task = self.start_worker('validate_ip', 'validate ip', 120)
+        self.worker.append(asyncio.ensure_future(validate_ip_task))
+
+        # 删除一天前验证失败
+        self.worker.append(asyncio.ensure_future(self.clean_fail()))
 
         # 更新ip地区
-        country_ip_task = self.start_worker('country_ip', 'country ip', 120)
+        country_ip_task = self.start_worker('country_ip', 'country ip', 300)
         self.worker.append(asyncio.ensure_future(country_ip_task))
