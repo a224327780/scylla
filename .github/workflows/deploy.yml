@@ -27,5 +27,5 @@ jobs:
       - name: "Trigger the pipeline"
         uses: okteto/pipeline@latest
         with:
-          name: nodequery
+          name: scylla
           timeout: 8m
