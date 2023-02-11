@@ -3,3 +3,4 @@ motor~=2.5.1
 aiohttp
 pyquery
 python-dotenv
+aiosocksy

@@ -2,7 +2,7 @@ import hashlib
 import inspect
 import math
 from datetime import timezone, timedelta, datetime
-from functools import wraps
+from functools import wraps, reduce
 from importlib import import_module
 from inspect import isawaitable
 from pathlib import Path
@@ -10,7 +10,7 @@ from pathlib import Path
 from sanic import HTTPResponse, Request, response
 from sanic.response import ResponseStream
 
-from tasks.extractors.base import BaseExtractor
+from spiders.extractors.base import BaseExtractor
 
 
 def get_bj_date(add_seconds=None, fmt='%Y-%m-%d %H:%M:%S'):
@@ -41,6 +41,10 @@ def diff_date_seconds(last_date):
     a = datetime.strptime(last_date, '%Y-%m-%d %H:%M:%S')
     b = datetime.strptime(get_bj_date(), '%Y-%m-%d %H:%M:%S')
     return (b - a).seconds
+
+
+def get_uptime(last_date, uptime=0):
+    return diff_date_seconds(last_date) + uptime
 
 
 def format_date(last_date):
@@ -90,11 +94,24 @@ def serializer():
 
 
 async def get_extractors():
-    module_path = 'tasks'
-    p = Path(__file__).parent.parent / 'tasks' / 'extractors'
+    module_path = 'spiders'
+    p = Path(__file__).parent.parent / 'spiders' / 'extractors'
     for path in p.glob('**/*.py'):
         module_name = module_path if module_path == path.parent.name else f'{module_path}.{path.parent.name}'
         m = import_module(f'{module_name}.{path.stem}')
         for name, extractor in inspect.getmembers(m):
             if inspect.isclass(extractor) and issubclass(extractor, BaseExtractor) and name != 'BaseExtractor':
                 yield name.lower(), extractor()
+
+
+def get_item_proxy(data):
+    data['country'] = ''
+    data['uptime'] = 0
+    data['speed'] = 0
+    data['status'] = 0
+    data['check_count'] = 0
+    data['last_time'] = get_bj_date()
+    data['fail_count'] = 0
+    data['proxy_type'] = data['proxy_type'].strip().upper()
+    data['port'] = int(data['port'].strip())
+    return data

@@ -1,10 +1,10 @@
 import os
-import subprocess
 
 from sanic import Request, Blueprint
-from sanic.response import empty, text
+from sanic.response import empty
 
-from utils.common import serializer, get_bj_date, get_utc_date
+from utils.common import serializer, get_bj_date, get_utc_date, format_date
+from utils.db import DB
 
 bp_home = Blueprint('home')
 
@@ -44,9 +44,18 @@ async def envs(request):
     return dict(os.environ)
 
 
-@bp_home.post('/os')
-# @serializer()
+@bp_home.get('/proxies')
+@serializer()
 async def run_os(request: Request):
-    cmd = request.form.get('cmd')
-    out_put = subprocess.getoutput(cmd)
-    return text(out_put)
+    col = DB.get_col()
+    data = []
+    async for item in col.find({'status': 1}).sort('last_time', -1).limit(20):
+        proxy = {
+            'ip': item['_id'],
+            'port': item['port'],
+            'type': item['proxy_type'],
+            'country': item['country'],
+            'last_check': format_date(item['last_time'])
+        }
+        data.append(proxy)
+    return data

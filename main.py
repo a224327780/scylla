@@ -1,26 +1,21 @@
 import os
 from traceback import format_exc
 
-from ruia.spider import async_all_tasks
 from sanic import Sanic
 from sanic import json as json_response
 from sanic.log import logger
 
-from apis.api import bp_api
 from apis.home import bp_home
-from apis.script import bp_script
-from tasks.scheduler import Scheduler
+from spiders.scheduler import Scheduler
 from utils import config
 from utils.common import fail, success
 from utils.db import DB
 from utils.log import DEFAULT_LOGGING
 
-app = Sanic('nodequery', log_config=DEFAULT_LOGGING)
+app = Sanic('scylla', log_config=DEFAULT_LOGGING)
 app.config.update_config(config)
 
 app.static('/favicon.ico', 'static/favicon.png')
-app.blueprint(bp_api)
-app.blueprint(bp_script)
 app.blueprint(bp_home)
 
 
@@ -54,17 +49,19 @@ async def catch_anything(request, exception):
 
 @app.listener('before_server_start')
 async def setup_db(_app: Sanic, loop) -> None:
-    DB.init_db(loop, 'db0', 'agent')
+    DB.init_db(loop, 'db0', 'scylla')
 
 
 @app.listener('after_server_start')
 async def setup_db(_app: Sanic, loop) -> None:
-    await app.add_task(Scheduler().run())
+    _app.ctx.scheduler = scheduler = Scheduler()
+    await app.add_task(scheduler.run())
 
 
 @app.listener('before_server_stop')
 async def setup_db(_app: Sanic, loop) -> None:
     DB.close_db()
+    await _app.ctx.scheduler.cancel()
 
 
 if __name__ == "__main__":
