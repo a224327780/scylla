@@ -2,6 +2,8 @@ import asyncio
 import time
 from datetime import timedelta
 
+import ujson
+
 from spiders.base.spider import Spider
 from spiders.jobs.fetch_ip import FetchIpJob
 from spiders.jobs.validate_ip import ValidateIpJob
@@ -21,16 +23,21 @@ class Scheduler(Spider):
 
     async def country_ip(self):
         col = DB.get_col()
-        async for item in col.find({'status': 1}).limit(200):
+        async for item in col.find({'status': 1, 'country': ''}).limit(200):
             url = f"https://api.ip.sb/geoip/{item['_id']}"
             yield self.request(url=url, callback=self._parse_ip_country, metadata=item, timeout=10)
 
     async def _parse_ip_country(self, response, item):
-        data = await response.json()
+        data = await response.text()
+        if 'country_code' not in data:
+            return
+
+        data = ujson.loads(data)
         country_code = data['country_code']
         self.logger.info(f"{item['_id']} -> {country_code}")
         col = DB.get_col()
         await col.update_one({'_id': item['_id']}, {'$set': {'country': country_code}})
+        await asyncio.sleep(8)
 
     async def validate_ip(self):
         col = DB.get_col()
