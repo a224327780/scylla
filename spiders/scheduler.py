@@ -30,6 +30,8 @@ class Scheduler(Spider):
         yield self.request(api, self._parse_ip_country, json=ip_list, method='POST', timeout=15)
 
     async def _parse_ip_country(self, response, metadata):
+        if response is None:
+            return
         data = await response.json()
         col = DB.get_col()
         for item in data:

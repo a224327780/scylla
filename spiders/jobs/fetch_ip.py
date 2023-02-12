@@ -9,6 +9,9 @@ class FetchIpJob:
 
     @classmethod
     async def parse_ip(cls, response, extractor):
+        if response is None:
+            return
+
         html = await response.text()
         doc = pyquery.PyQuery(html)
         col = DB.get_col()

@@ -12,11 +12,11 @@ class ValidateIpJob:
     async def validate(cls, response, item):
         end_time = time.perf_counter()
         speed = '{:.2f}'.format(end_time - float(item['begin_time']))
-        is_ok = response.status == 200
+        is_ok = response and response.status == 200
         status = 1 if is_ok else 2
         data = {
             'status': status,
-            'speed': speed,
+            'speed': speed if is_ok else 0,
             'last_time': get_bj_date(),
             'check_count': int(item['check_count']) + 1,
             'fail_count': 0 if is_ok else int(item['fail_count']) + 1,

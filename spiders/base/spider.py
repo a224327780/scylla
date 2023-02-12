@@ -38,19 +38,21 @@ class Spider:
         try:
             async with self.sem:
                 response = await self.fetch(url, **request_config)
-            if callback is not None:
-                if iscoroutinefunction(callback):
-                    callback_result = await callback(response, metadata)
-                else:
-                    callback_result = callback(response, metadata)
-            else:
-                callback_result = None
-            return callback_result, response
         except asyncio.TimeoutError:
+            response = None
             logger.error(f"<Error: {url} Timeout> ")
         except Exception as e:
+            response = None
             logger.error(f"<Error: {url} {e}>")
-        return None, None
+
+        if callback is not None:
+            if iscoroutinefunction(callback):
+                callback_result = await callback(response, metadata)
+            else:
+                callback_result = callback(response, metadata)
+        else:
+            callback_result = None
+        return callback_result, response
 
     async def fetch(self, url: str, method='GET', **request_config):
         request_config.setdefault('ssl', False)
