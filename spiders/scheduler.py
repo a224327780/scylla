@@ -21,7 +21,7 @@ class Scheduler(Spider):
                 headers.update(request_config)
 
             for url in urls:
-                # if 'hidemy' not in url:
+                # if 'advanced' not in url:
                 #     continue
                 yield self.request(url=url, callback=FetchIpJob.parse_ip, metadata=extractor, timeout=15,
                                    headers=headers)

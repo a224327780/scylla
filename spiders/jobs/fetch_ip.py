@@ -20,7 +20,6 @@ class FetchIpJob:
             item['name'] = name
             proxy = get_item_proxy(item)
             _id = proxy.pop('ip')
-
             if not await col.find_one({'_id': _id}):
                 proxy['_id'] = _id
                 await col.insert_one(proxy)
