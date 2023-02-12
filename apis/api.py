@@ -6,6 +6,7 @@ from sanic.response import empty
 from utils.common import serializer, get_bj_date, get_utc_date, format_date
 from utils.db import DB
 
+bp_api = Blueprint('api', url_prefix='api')
 bp_home = Blueprint('home')
 
 
@@ -44,9 +45,9 @@ async def envs(request):
     return dict(os.environ)
 
 
-@bp_home.get('/proxies')
+@bp_api.get('/proxies')
 @serializer()
-async def run_os(request: Request):
+async def proxies(request: Request):
     col = DB.get_col()
     data = []
     async for item in col.find({'status': 1}).sort('last_time', -1).limit(20):
@@ -58,4 +59,20 @@ async def run_os(request: Request):
             'last_check': format_date(item['last_time'])
         }
         data.append(proxy)
+    return data
+
+
+@bp_api.get('/country')
+@serializer()
+async def country(request: Request):
+    col = DB.get_col()
+    data = []
+    pip = [
+        {'$match': {'status': 1}},
+        {
+            "$group": {"_id": "$country", "total": {"$sum": 1}}
+        }
+    ]
+    async for item in col.aggregate(pipeline=pip):
+        data.append({'country': item['_id'], 'total': item['total']})
     return data

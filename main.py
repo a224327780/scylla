@@ -5,7 +5,7 @@ from sanic import Sanic
 from sanic import json as json_response
 from sanic.log import logger
 
-from apis.home import bp_home
+from apis.api import bp_api, bp_home
 from spiders.scheduler import Scheduler
 from utils import config
 from utils.common import fail, success
@@ -17,6 +17,7 @@ app.config.update_config(config)
 
 app.static('/favicon.ico', 'static/favicon.png')
 app.blueprint(bp_home)
+app.blueprint(bp_api)
 
 
 @app.middleware('response')
@@ -55,7 +56,7 @@ async def setup_db(_app: Sanic, loop) -> None:
 @app.listener('after_server_start')
 async def setup_db(_app: Sanic, loop) -> None:
     _app.ctx.scheduler = scheduler = Scheduler()
-    await app.add_task(scheduler.run())
+    # await app.add_task(scheduler.run())
 
 
 @app.listener('before_server_stop')

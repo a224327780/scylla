@@ -30,24 +30,26 @@ class Scheduler(Spider):
 
             self.logger.info('start country ip')
             ip_list = []
-            async for item in col.find({'status': 1, 'country': ''}).limit(50):
-                ip_list.append(item['_id'])
             try:
-                response = await self.fetch(url=api, json=ip_list, method='POST', timeout=15)
-                data = await response.json()
-                col = DB.get_col()
-                for item in data:
-                    ip = item['query']
-                    country_code = item['countryCode']
-                    self.logger.info(f"{ip} -> {country_code}")
-                    await col.update_one({'_id': ip}, {'$set': {'country': country_code}})
-                await self.country_ip_lock.acquire()
+                async for item in col.find({'status': 1, 'country': ''}).limit(50):
+                    ip_list.append(item['_id'])
+                if len(ip_list):
+                    response = await self.fetch(url=api, json=ip_list, method='POST', timeout=15)
+                    data = await response.json()
+                    col = DB.get_col()
+                    for item in data:
+                        ip = item['query']
+                        country_code = item['countryCode']
+                        self.logger.info(f"{ip} -> {country_code}")
+                        await col.update_one({'_id': ip}, {'$set': {'country': country_code}})
             except Exception as e:
                 self.logger.error(e)
+            finally:
+                await self.country_ip_lock.acquire()
 
     async def validate_ip(self):
         col = DB.get_col()
-        async for item in col.find().sort('status', 1).limit(200):
+        async for item in col.find().sort([('status', 1, ('last_time', 1))]).limit(200):
             # url = 'http://httpbin.org/ip' if item['is_cn'] else 'http://t66y.com/index.php'
             url = 'http://httpbin.org/ip'
             scheme = item['proxy_type'].lower().replace('https', 'http')
