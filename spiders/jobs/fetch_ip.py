@@ -15,7 +15,7 @@ class FetchIpJob:
         html = await response.text()
         doc = pyquery.PyQuery(html)
         col = DB.get_col()
-        name = extractor.__class__.__name__
+        name = extractor.name
         async for item in extractor.parse(doc):
             item['name'] = name
             proxy = get_item_proxy(item)

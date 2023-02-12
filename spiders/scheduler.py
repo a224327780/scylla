@@ -13,6 +13,7 @@ class Scheduler(Spider):
     async def fetch_ip(self):
         headers = self.headers
         async for (name, extractor) in get_extractors():
+            extractor.name = name
             urls = await extractor.urls()
             request_config = extractor.request_config
             if request_config:
@@ -60,7 +61,7 @@ class Scheduler(Spider):
             yield self.request(url=url, callback=ValidateIpJob.validate, metadata=item, proxy=proxy)
 
     async def clean_fail(self):
-        selector = {'status': 2, 'fail_count': {'$gte': 2}}
+        selector = {'status': 2, 'fail_count': {'$gte': 3}}
         col = DB.get_col()
         while True:
             async for item in col.find(selector).limit(300):

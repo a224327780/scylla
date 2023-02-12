@@ -53,7 +53,7 @@ async def proxies(request: Request):
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
     offset = (page - 1) * limit
-    async for item in col.find({'status': 1, 'country': {'$ne': ''}}).sort('last_time', -1).limit(20).skip(offset):
+    async for item in col.find({'status': 1, 'country': {'$ne': ''}}).sort('last_time', -1).limit(limit).skip(offset):
         proxy = {
             'ip': item['_id'],
             'port': item['port'],
