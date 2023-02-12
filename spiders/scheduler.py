@@ -53,14 +53,13 @@ class Scheduler(Spider):
             yield self.request(url=url, callback=ValidateIpJob.validate, metadata=item, proxy=proxy)
 
     async def clean_fail(self):
-        day_1_ago = (get_bj_date() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
-        selector = {'status': 2, 'last_time': {'$lt': day_1_ago}}
+        selector = {'status': 2, 'fail_count': {'$gte': 3}}
         col = DB.get_col()
         while True:
             async for item in col.find(selector).limit(200):
                 self.logger.info(f'delete fail ip: {item["_id"]}')
                 await col.delete_one({'_id': item['_id']})
-            await asyncio.sleep(3600 * 6)
+            await asyncio.sleep(3600 * 4)
 
     async def run(self):
         # 获取ip
@@ -68,7 +67,7 @@ class Scheduler(Spider):
         self.worker.append(asyncio.ensure_future(fetch_ip_task))
 
         # 验证ip
-        validate_ip_task = self.start_worker('validate_ip', 'validate ip', 180)
+        validate_ip_task = self.start_worker('validate_ip', 'validate ip', 150)
         self.worker.append(asyncio.ensure_future(validate_ip_task))
 
         # 删除一天前验证失败
