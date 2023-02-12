@@ -40,7 +40,7 @@ class Spider:
                 response = await self.fetch(url, **request_config)
         except asyncio.TimeoutError:
             response = None
-            logger.error(f"<Error: {url} Timeout> ")
+            logger.error(f"<Error: {url} Timeout>")
         except Exception as e:
             response = None
             logger.error(f"<Error: {url} {e}>")

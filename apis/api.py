@@ -50,7 +50,7 @@ async def envs(request):
 async def proxies(request: Request):
     col = DB.get_col()
     data = []
-    async for item in col.find({'status': 1}).sort('last_time', -1).limit(20):
+    async for item in col.find({'status': 1, 'country': {'$ne': ''}}).sort('last_time', -1).limit(20):
         proxy = {
             'ip': item['_id'],
             'port': item['port'],
