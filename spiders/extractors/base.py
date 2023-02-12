@@ -1,5 +1,7 @@
 class BaseExtractor:
 
+    request_config = {}
+
     async def urls(self) -> [str]:
         raise NotImplementedError
 

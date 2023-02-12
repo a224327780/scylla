@@ -60,6 +60,15 @@ def format_date(last_date):
     return f'{int(s / p)} {date_name[i]}'
 
 
+def format_uptime(uptime):
+    s = int(uptime) / 3600
+    if s < 1:
+        return f'{int(s * 60)}分钟'
+    if s < 24:
+        return f'{int(s)}小时'
+    return f'{int(s / 24)}天'
+
+
 def success(data=None, message=''):
     if not data:
         data = []
@@ -105,7 +114,8 @@ async def get_extractors():
 
 
 def get_item_proxy(data):
-    data['country'] = ''
+    if 'country' not in data:
+        data['country'] = ''
     data['uptime'] = 0
     data['speed'] = 0
     data['status'] = 0

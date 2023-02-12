@@ -17,6 +17,8 @@ class Spider:
         self.request_session = ClientSession(connector=ProxyConnector(), request_class=ProxyClientRequest)
         self.worker = []
         self.logger = logging.getLogger('sanic.root')
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'}
 
     async def start_worker(self, task_func, work_name, sleep=3600, callback=None):
         while True:
@@ -57,6 +59,7 @@ class Spider:
     async def fetch(self, url: str, method='GET', **request_config):
         request_config.setdefault('ssl', False)
         request_config.setdefault('timeout', 20)
+        request_config.setdefault('headers', self.headers)
         return await self.request_session.request(method, url, **request_config)
 
     async def cancel(self):

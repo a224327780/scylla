@@ -1,4 +1,4 @@
-import ujson
+import json
 
 from spiders.extractors.base import BaseExtractor
 
@@ -10,7 +10,7 @@ class ProxyScrape(BaseExtractor):
 
     async def parse(self, document):
         html = document.html()
-        data = ujson.loads(html)
+        data = json.loads(html)
         for _type in data:
             i = 0
             for k, v in data[_type].items():
