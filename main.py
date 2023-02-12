@@ -56,7 +56,7 @@ async def setup_db(_app: Sanic, loop) -> None:
 @app.listener('after_server_start')
 async def setup_db(_app: Sanic, loop) -> None:
     _app.ctx.scheduler = scheduler = Scheduler()
-    # await app.add_task(scheduler.run())
+    await app.add_task(scheduler.run())
 
 
 @app.listener('before_server_stop')
