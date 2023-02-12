@@ -49,7 +49,7 @@ class Scheduler(Spider):
 
     async def validate_ip(self):
         col = DB.get_col()
-        async for item in col.find().sort([('status', 1, ('last_time', 1))]).limit(200):
+        async for item in col.find().sort([('status', 1), ('last_time', 1)]).limit(200):
             # url = 'http://httpbin.org/ip' if item['is_cn'] else 'http://t66y.com/index.php'
             url = 'http://httpbin.org/ip'
             scheme = item['proxy_type'].lower().replace('https', 'http')
