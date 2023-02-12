@@ -2,8 +2,6 @@ import asyncio
 import time
 from datetime import timedelta
 
-import ujson
-
 from spiders.base.spider import Spider
 from spiders.jobs.fetch_ip import FetchIpJob
 from spiders.jobs.validate_ip import ValidateIpJob
@@ -12,6 +10,7 @@ from utils.db import DB
 
 
 class Scheduler(Spider):
+    country_ip_lock = asyncio.Lock()
 
     async def fetch_ip(self):
         async for (name, extractor) in get_extractors():
@@ -24,21 +23,27 @@ class Scheduler(Spider):
     async def country_ip(self):
         col = DB.get_col()
         api = 'http://ip-api.com/batch'
-        ip_list = []
-        async for item in col.find({'status': 1, 'country': ''}).limit(50):
-            ip_list.append(item['_id'])
-        yield self.request(api, self._parse_ip_country, json=ip_list, method='POST', timeout=15)
+        while True:
+            if self.country_ip_lock.locked():
+                await asyncio.sleep(1)
+                continue
 
-    async def _parse_ip_country(self, response, metadata):
-        if response is None:
-            return
-        data = await response.json()
-        col = DB.get_col()
-        for item in data:
-            ip = item['query']
-            country_code = item['countryCode']
-            self.logger.info(f"{ip} -> {country_code}")
-            await col.update_one({'_id': ip}, {'$set': {'country': country_code}})
+            self.logger.info('start country ip')
+            ip_list = []
+            async for item in col.find({'status': 1, 'country': ''}).limit(50):
+                ip_list.append(item['_id'])
+            try:
+                response = await self.fetch(url=api, json=ip_list, method='POST', timeout=15)
+                data = await response.json()
+                col = DB.get_col()
+                for item in data:
+                    ip = item['query']
+                    country_code = item['countryCode']
+                    self.logger.info(f"{ip} -> {country_code}")
+                    await col.update_one({'_id': ip}, {'$set': {'country': country_code}})
+                await self.country_ip_lock.acquire()
+            except Exception as e:
+                self.logger.error(e)
 
     async def validate_ip(self):
         col = DB.get_col()
@@ -60,18 +65,21 @@ class Scheduler(Spider):
                 await col.delete_one({'_id': item['_id']})
             await asyncio.sleep(3600 * 6)
 
+    async def validate_ip_after(self, task_result):
+        if self.country_ip_lock.locked():
+            self.country_ip_lock.release()
+
     async def run(self):
         # 获取ip
         fetch_ip_task = self.start_worker('fetch_ip', 'fetch ip', 3600)
         self.worker.append(asyncio.ensure_future(fetch_ip_task))
 
         # 验证ip
-        validate_ip_task = self.start_worker('validate_ip', 'validate ip', 120)
+        validate_ip_task = self.start_worker('validate_ip', 'validate ip', 120, self.validate_ip_after)
         self.worker.append(asyncio.ensure_future(validate_ip_task))
 
         # 删除一天前验证失败
         self.worker.append(asyncio.ensure_future(self.clean_fail()))
 
         # 更新ip地区
-        country_ip_task = self.start_worker('country_ip', 'country ip', 300)
-        self.worker.append(asyncio.ensure_future(country_ip_task))
+        self.worker.append(asyncio.ensure_future(self.country_ip()))
