@@ -67,7 +67,7 @@ class Scheduler(Spider):
             async for item in col.find(selector).limit(300):
                 self.logger.info(f'delete fail ip: {item["_id"]}')
                 await col.delete_one({'_id': item['_id']})
-            await asyncio.sleep(3600 * 4)
+            await asyncio.sleep(600)
 
     async def run(self):
         # 获取ip
