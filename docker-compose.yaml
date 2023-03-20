@@ -5,7 +5,7 @@ services:
       context: .
     scale: 1
     environment:
-      - MONGO_URI=${MONGO_URI_SJ}
+      - MONGO_URI=${MONGO_URI}
       - REDIS_URI=${REDIS_URI}
     ports:
       - 8080
