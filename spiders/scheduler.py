@@ -54,7 +54,8 @@ class Scheduler(Spider):
         col = DB.get_col()
         async for item in col.find().sort([('status', 1), ('last_time', 1)]).limit(200):
             # url = 'http://httpbin.org/ip' if item['is_cn'] else 'http://t66y.com/index.php'
-            url = 'http://httpbin.org/ip'
+            # url = 'http://httpbin.org/ip'
+            url = 'https://fulizzz.xyz/?extensionId=1641072159453347840'
             scheme = item['proxy_type'].lower().replace('https', 'http')
             proxy = f"{scheme}://{item['_id']}:{item['port']}"
             item['begin_time'] = time.perf_counter()
