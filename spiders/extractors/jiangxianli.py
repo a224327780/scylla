@@ -4,7 +4,8 @@ from spiders.extractors.base import BaseExtractor
 class JiangXianLi(BaseExtractor):
 
     async def urls(self) -> [str]:
-        return ['https://ip.jiangxianli.com/?page=1&country=%E4%B8%AD%E5%9B%BD']
+        return []
+        # return ['https://ip.jiangxianli.com/?page=1&country=%E4%B8%AD%E5%9B%BD']
 
     async def parse(self, doc):
         elements = doc('.layui-form .layui-table tbody tr')

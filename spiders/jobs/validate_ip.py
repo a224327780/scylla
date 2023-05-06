@@ -5,14 +5,14 @@ from sanic.log import logger
 from utils.common import get_bj_date, get_uptime
 from utils.db import DB
 
-
 class ValidateIpJob:
 
     @classmethod
     async def validate(cls, response, item):
         end_time = time.perf_counter()
-        speed = '{:.2f}'.format(end_time - float(item['begin_time']))
-        is_ok = response and response.status == 200
+        begin_time = item.pop('begin_time')
+        speed = '{:.2f}'.format(end_time - float(begin_time))
+        is_ok = response and response.status in [200, 204]
         status = 1 if is_ok else 2
         data = {
             'status': status,
@@ -22,6 +22,8 @@ class ValidateIpJob:
             'fail_count': 0 if is_ok else int(item['fail_count']) + 1,
             'uptime': get_uptime(item['last_time'], item['uptime']) if is_ok else 0
         }
-        col = DB.get_col()
-        await col.update_one({'_id': item['_id']}, {'$set': data})
+        item.update(data)
+        # DB.get_db().create_document(item)
+        # col = DB.get_col()
+        # await col.update_one({'_id': item['_id']}, {'$set': data})
         logger.info(f'validate ip:{item["_id"]} -> {response.status}')

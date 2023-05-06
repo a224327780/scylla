@@ -1,6 +1,6 @@
-sanic==22.6.2
-motor~=2.5.1
+sanic==23.3.0
 aiohttp
 pyquery
 python-dotenv
 aiosocksy
+cloudant

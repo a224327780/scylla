@@ -50,17 +50,17 @@ async def catch_anything(request, exception):
 
 @app.listener('before_server_start')
 async def setup_db(_app: Sanic, loop) -> None:
-    DB.init_db(loop, 'db0', 'scylla')
+    DB.init_db(loop, 'scylla')
 
 
 @app.listener('after_server_start')
-async def setup_db(_app: Sanic, loop) -> None:
+async def setup_scheduler(_app: Sanic, loop) -> None:
     _app.ctx.scheduler = scheduler = Scheduler()
     await app.add_task(scheduler.run())
 
 
 @app.listener('before_server_stop')
-async def setup_db(_app: Sanic, loop) -> None:
+async def close_db(_app: Sanic, loop) -> None:
     DB.close_db()
     await _app.ctx.scheduler.cancel()
 

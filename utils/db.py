@@ -1,24 +1,28 @@
 import os
-
-from motor.motor_asyncio import AsyncIOMotorClient
-
+from cloudant.client import Cloudant
+from cloudant.result import Result, ResultByKey
 
 class DB:
     client = None
     db = None
-    col = None
 
     @classmethod
-    def init_db(cls, loop, db_name, col_name='scylla'):
-        mongo_uri = os.getenv('MONGO_URI')
-        cls.client: AsyncIOMotorClient = AsyncIOMotorClient(mongo_uri, io_loop=loop)
-        cls.db = cls.client[db_name]
-        cls.col = cls.db[col_name]
+    def init_db(cls, loop, db_name='scylla'):
+        pasword = os.getenv('DB_PASSWORD')
+        username = os.getenv('DB_USERNAME', 'admin')
+        host = os.getenv('DB_HOST', 'https://couchdb-atcooc123.cloud.okteto.net')
+        cls.client = Cloudant(username, pasword, url=host, connect=True, use_basic_auth=True)
+        cls.db = cls.client.create_database(db_name)
 
     @classmethod
-    def get_col(cls, col_name='scylla'):
-        return cls.db[col_name] if col_name else cls.col
+    def get_db(cls, db_name=None):
+        return cls.client[db_name] if db_name else cls.db
+
+    @classmethod
+    def save(cls, data):
+        return cls.db.create_document(data)
 
     @classmethod
     def close_db(cls):
-        cls.client.close()
+        if cls.client:
+            cls.client.disconnect()
