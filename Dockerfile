@@ -1,4 +1,4 @@
-FROM ghcr.io/a224327780/python
+FROM python:3.8-bullseye
 
 WORKDIR /data/python
 
