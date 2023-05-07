@@ -62,7 +62,7 @@ class BaseTask:
                             await self.process_async_callback(callback_result, response)
                     else:
                         self.logger.error(f'[{work_name}] <Error: {task_result}>')
-                        await self.close_request()
+                    await self.close_request()
                 await self.after_start_worker()
             self.logger.info(f'[{work_name}]: Wait {sleep} seconds.')
             await asyncio.sleep(sleep)
@@ -89,11 +89,8 @@ class BaseTask:
             response = None
             self.logger.error(f"<Error: {url} {e}>")
 
-        if not response.ok:
-            message = await response.text()
-            if '<title>' in message:
-                message = re.search(r'<title>(.*?)</title>', message).group(1)
-            self.logger.error(f"<Error: {url} {response.status} {message}>")
+        if response and not response.ok:
+            self.logger.error(f"<Error: {url} {response.status}>")
             return None, None
 
         callback_result = None

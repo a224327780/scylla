@@ -17,4 +17,4 @@ class FateZero(BaseExtractor):
                 is_cn = 1 if data['country'] in ['CN', 'HK'] else 0
                 yield {'ip': data['host'], 'port': data['port'], 'proxy_type': data['type'], 'is_cn': is_cn}
             except Exception as e:
-                print(e, item)
+                print(f"<Error: {e} {item}>")

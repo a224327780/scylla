@@ -19,7 +19,6 @@ class CountryIpTask(BaseTask):
             return
 
         data = await response.json()
-        self.logger.info(data)
         for item in data:
             ip = item['query']
             country_code = item['countryCode']

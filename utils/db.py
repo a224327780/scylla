@@ -1,6 +1,7 @@
+import asyncio
 import logging
 from pathlib import Path
-from sqlite3 import IntegrityError
+from sqlite3 import IntegrityError, DatabaseError
 
 import aiosqlite
 
@@ -19,7 +20,7 @@ class DB:
             sql_file = db_file.parent / 'table.sql'
             sql_data = sql_file.read_text()
 
-        self.client = await aiosqlite.connect(db_file)
+        self.client = await aiosqlite.connect(db_file, timeout=10)
         self.client.row_factory = aiosqlite.Row
         if sql_data:
             self.logger.info('Initialize Table.')
@@ -39,6 +40,12 @@ class DB:
             await self.client.commit()
         except IntegrityError:
             pass
+        except DatabaseError as e:
+            msg = str(e)
+            if 'locked' not in msg:
+                raise e
+            await asyncio.sleep(10)
+            await self.insert(data)
 
     async def update(self, _id, data: dict):
         columns = ', '.join('{} = ?'.format(k) for k in data)
