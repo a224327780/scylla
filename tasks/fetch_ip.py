@@ -42,7 +42,7 @@ class FetchIpTask(BaseTask):
                 _id = proxy.pop('ip')
                 proxy['id'] = _id
                 self.proxy_count += 1
-                # await self.db.insert(proxy)
+                await self.db.insert(proxy)
                 self.logger.info(f'[{name}] fetch ip: {_id} in queue.')
             except Exception as e:
                 self.logger.error(f'[{name}] parse error: {e}\n{item}')
