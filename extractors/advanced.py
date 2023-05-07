@@ -1,6 +1,6 @@
 import base64
 
-from spiders.extractors.base import BaseExtractor
+from extractors.base import BaseExtractor
 
 
 class Advanced(BaseExtractor):

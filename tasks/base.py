@@ -60,7 +60,7 @@ class BaseTask:
                         if isinstance(callback_result, AsyncGeneratorType):
                             await self.process_async_callback(callback_result, response)
                     else:
-                        self.logger.error(f'<Error: {task_result}>')
+                        self.logger.error(f'[{work_name}] <Error: {task_result}>')
                         await self.close_request()
                 await self.after_start_worker()
             self.logger.info(f'[{work_name}]: Wait {sleep} seconds.')

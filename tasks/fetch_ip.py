@@ -1,11 +1,9 @@
 import copy
-from typing import Optional
 
 import pyquery
 
 from tasks.base import BaseTask
 from utils.common import get_extractors, get_item_proxy
-from utils.db import DB
 
 
 class FetchIpTask(BaseTask):
@@ -36,13 +34,18 @@ class FetchIpTask(BaseTask):
         name = extractor.name
 
         async for item in extractor.parse(doc):
-            item['name'] = name
-            proxy = get_item_proxy(item)
-            _id = proxy.pop('ip')
-            proxy['id'] = _id
-            self.proxy_count += 1
-            await self.db.insert(proxy)
-            self.logger.info(f'[{name}] fetch ip: {_id} in queue.')
+            if not item.get('ip') or not item.get('port'):
+                continue
+            try:
+                item['name'] = name
+                proxy = get_item_proxy(item)
+                _id = proxy.pop('ip')
+                proxy['id'] = _id
+                self.proxy_count += 1
+                # await self.db.insert(proxy)
+                self.logger.info(f'[{name}] fetch ip: {_id} in queue.')
+            except Exception as e:
+                self.logger.error(f'[{name}] parse error: {e}\n{item}')
 
     async def after_start_worker(self):
         self.logger.info(f'fetch count ip: {self.proxy_count}')

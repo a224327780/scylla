@@ -1,4 +1,4 @@
-from spiders.extractors.base import BaseExtractor
+from extractors.base import BaseExtractor
 
 
 class ProxyTools(BaseExtractor):

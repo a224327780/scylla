@@ -1,20 +1,21 @@
-from spiders.extractors.base import BaseExtractor
+from extractors.base import BaseExtractor
 
 
-class FreeProxyList(BaseExtractor):
+class HideMy(BaseExtractor):
+    request_config = {'Cookie': 't=296843518'}
 
     async def urls(self) -> [str]:
-        return ['https://free-proxy-list.net/']
+        return ['https://hidemy.name/en/proxy-list/']
 
     async def parse(self, doc):
-        elements = doc('.fpl-list tbody tr')
+        elements = doc('.table_block tbody tr')
         for element in elements.items():
             element_td = element('td')
             ip = element_td.eq(0).text().strip()
             port = element_td.eq(1).text().strip()
-            code = element_td.eq(2).text().strip().lower()
-            proxy_type = 'https' if element_td.eq(6).text().strip() == 'yes' else 'http'
+            country = element_td.eq(2).text().strip()
+            proxy_type = element_td.eq(4).text().strip()
             if not port:
                 continue
-            is_cn = 1 if code in ['cn', 'hk'] else 0
+            is_cn = 1 if country == 'China' else 0
             yield {'ip': ip, 'port': port, 'proxy_type': proxy_type, 'is_cn': is_cn}

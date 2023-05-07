@@ -35,7 +35,7 @@ class DB:
         await self.client.commit()
 
     async def get_pending_validation(self, limit=200):
-        async for row in self.query('', limit=limit, order_by='status asc, last_time asc'):
+        async for row in self.query(limit=limit, order_by='status asc, last_time asc'):
             yield row
 
     async def get_country_empty(self, limit=50):
@@ -48,9 +48,11 @@ class DB:
         async for row in self.query(where, limit=limit, fields='id'):
             yield row
 
-    async def query(self, where, order_by=None, fields=None, limit=50, offset=0, group_by=None):
+    async def query(self, where=None, order_by=None, fields=None, limit=50, offset=0, group_by=None):
         if fields is None:
             fields = '*'
+        if where is None:
+            where = '1 = 1'
 
         order = f' order by {order_by}' if order_by else ''
         group = f' group by {group_by}' if group_by else ''

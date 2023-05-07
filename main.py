@@ -6,7 +6,7 @@ from sanic import json as json_response
 from sanic.log import logger
 
 from apis.api import bp_api, bp_home
-from spiders.scheduler import Scheduler
+from tasks.scheduler import Scheduler
 from utils import config
 from utils.common import fail, success
 from utils.db import DB

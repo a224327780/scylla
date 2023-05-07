@@ -19,7 +19,7 @@ class Scheduler:
         fetch_ip_task = FetchIpTask.run(request_session, db)
         asyncio.ensure_future(fetch_ip_task)
 
-        await asyncio.sleep(20)
+        await asyncio.sleep(1)
 
         # 验证ip
         validate_ip_task = ValidateIpTask.run(request_session, db, 120)

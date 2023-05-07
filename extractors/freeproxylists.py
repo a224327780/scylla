@@ -1,7 +1,7 @@
 import re
 from urllib.parse import unquote
 
-from spiders.extractors.base import BaseExtractor
+from extractors.base import BaseExtractor
 
 
 class FreeProxyLists(BaseExtractor):

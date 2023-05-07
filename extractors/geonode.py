@@ -1,6 +1,6 @@
 import json
 
-from spiders.extractors.base import BaseExtractor
+from extractors.base import BaseExtractor
 
 
 class GeoNode(BaseExtractor):

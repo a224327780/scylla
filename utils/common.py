@@ -2,7 +2,7 @@ import hashlib
 import inspect
 import math
 from datetime import timezone, timedelta, datetime
-from functools import wraps, reduce
+from functools import wraps
 from importlib import import_module
 from inspect import isawaitable
 from pathlib import Path
@@ -10,7 +10,7 @@ from pathlib import Path
 from sanic import HTTPResponse, Request, response
 from sanic.response import ResponseStream
 
-from spiders.extractors.base import BaseExtractor
+from extractors.base import BaseExtractor
 
 
 def get_bj_date(add_seconds=None, fmt='%Y-%m-%d %H:%M:%S'):
@@ -103,8 +103,8 @@ def serializer():
 
 
 async def get_extractors():
-    module_path = 'spiders'
-    p = Path(__file__).parent.parent / 'spiders' / 'extractors'
+    module_path = 'extractors'
+    p = Path(__file__).parent.parent / module_path
     for path in p.glob('**/*.py'):
         module_name = module_path if module_path == path.parent.name else f'{module_path}.{path.parent.name}'
         m = import_module(f'{module_name}.{path.stem}')
@@ -123,5 +123,5 @@ def get_item_proxy(data):
     data['last_time'] = get_bj_date()
     data['fail_count'] = 0
     data['proxy_type'] = data['proxy_type'].strip().upper()
-    data['port'] = int(data['port'].strip())
+    data['port'] = int(str(data['port']).strip())
     return data

@@ -1,6 +1,6 @@
 import ujson
 
-from spiders.extractors.base import BaseExtractor
+from extractors.base import BaseExtractor
 
 
 class FateZero(BaseExtractor):
