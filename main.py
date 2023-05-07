@@ -57,14 +57,14 @@ async def setup_db(_app: Sanic, loop) -> None:
     await _app.ctx.db.conn()
 
 
-# @app.listener('after_server_start')
-# async def setup_scheduler(_app: Sanic, loop) -> None:
-#     await _app.add_task(Scheduler.run(_app))
+@app.listener('after_server_start')
+async def setup_scheduler(_app: Sanic, loop) -> None:
+    await _app.add_task(Scheduler.run(_app))
 
 
 @app.listener('before_server_stop')
 async def close_db(_app: Sanic, loop) -> None:
-    # await Scheduler.shutdown()
+    await Scheduler.shutdown()
     await _app.ctx.db.close()
     await _app.ctx.request_session.close()
 

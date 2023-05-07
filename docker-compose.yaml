@@ -7,7 +7,7 @@ services:
     ports:
       - 8080
     volumes:
-      - scylla_data:/data/python
+      - scylla_data:/data/python/scylla
 
 volumes:
   scylla_data:
