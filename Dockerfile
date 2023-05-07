@@ -1,6 +1,6 @@
 FROM python:3.8-bullseye
 
-WORKDIR /data/python
+WORKDIR /data/python/scylla
 
 COPY . .
 

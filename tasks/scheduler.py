@@ -29,7 +29,7 @@ class Scheduler:
         asyncio.ensure_future(CleanFailTask.run(request_session, db))
 
         # 更新ip地区
-        asyncio.ensure_future(CountryIpTask.run(request_session, db, 600))
+        asyncio.ensure_future(CountryIpTask.run(request_session, db, 120))
 
     @classmethod
     async def shutdown(cls):

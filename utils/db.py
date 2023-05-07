@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from sqlite3 import IntegrityError
 
@@ -9,11 +10,24 @@ class DB:
 
     def __init__(self, loop=None):
         self.table_name = 'scylla'
+        self.logger = logging.getLogger('sanic.root')
 
     async def conn(self):
         db_file = Path(__file__).parent.parent / 'data.db'
+        sql_data = None
+        if not db_file.is_file():
+            sql_file = db_file.parent / 'table.sql'
+            sql_data = sql_file.read_text()
+
         self.client = await aiosqlite.connect(db_file)
         self.client.row_factory = aiosqlite.Row
+        if sql_data:
+            self.logger.info('Initialize Table.')
+            for sql in sql_data.split(';\n'):
+                if sql.strip():
+                    self.logger.info(f'Execute sql:\n{sql}')
+                    await self.client.execute(sql)
+            await self.client.commit()
 
     async def insert(self, data: dict):
         columns = ', '.join(data.keys())

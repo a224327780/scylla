@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 from asyncio import iscoroutinefunction, coroutines
 from types import AsyncGeneratorType
 from typing import Optional
@@ -90,7 +91,9 @@ class BaseTask:
 
         if not response.ok:
             message = await response.text()
-            self.logger.error(f"<Error: {url} {message}>")
+            if '<title>' in message:
+                message = re.search(r'<title>(.*?)</title>', message).group(1)
+            self.logger.error(f"<Error: {url} {response.status} {message}>")
             return None, None
 
         callback_result = None
