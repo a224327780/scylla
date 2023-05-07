@@ -50,19 +50,23 @@ async def catch_anything(request, exception):
 
 @app.listener('before_server_start')
 async def setup_db(_app: Sanic, loop) -> None:
-    DB.init_db(loop, 'scylla')
+    from aiohttp import ClientSession
+    from aiosocksy.connector import ProxyConnector, ProxyClientRequest
+    _app.ctx.request_session = ClientSession(connector=ProxyConnector(), request_class=ProxyClientRequest, loop=loop)
+    _app.ctx.db = DB(loop=loop)
+    await _app.ctx.db.conn()
 
 
 @app.listener('after_server_start')
 async def setup_scheduler(_app: Sanic, loop) -> None:
-    _app.ctx.scheduler = scheduler = Scheduler()
-    await app.add_task(scheduler.run())
+    await _app.add_task(Scheduler.run(_app))
 
 
 @app.listener('before_server_stop')
 async def close_db(_app: Sanic, loop) -> None:
-    DB.close_db()
-    await _app.ctx.scheduler.cancel()
+    await Scheduler.shutdown()
+    await _app.ctx.db.close()
+    await _app.ctx.request_session.close()
 
 
 if __name__ == "__main__":

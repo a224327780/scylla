@@ -4,8 +4,12 @@ services:
     build:
       context: .
     scale: 1
-    environment:
-      - MONGO_URI=${MONGO_URI}
-      - REDIS_URI=${REDIS_URI}
     ports:
       - 8080
+    volumes:
+      - scylla_data:/data/python
+
+volumes:
+  scylla_data:
+    driver_opts:
+      size: 128Mi

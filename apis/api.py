@@ -48,14 +48,15 @@ async def envs(request):
 @bp_api.get('/proxies')
 @serializer()
 async def proxies(request: Request):
-    col = DB.get_col()
+    db: DB = request.app.ctx.db
     data = []
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 20))
     offset = (page - 1) * limit
-    async for item in col.find({'status': 1, 'country': {'$ne': ''}}).sort('last_time', -1).limit(limit).skip(offset):
+    where = "status = 1 and country <> ''"
+    async for item in db.query(where, order_by='last_time desc', limit=limit, offset=offset):
         proxy = {
-            'ip': item['_id'],
+            'ip': item['id'],
             'port': item['port'],
             'type': item['proxy_type'],
             'country': item['country'],
@@ -69,17 +70,9 @@ async def proxies(request: Request):
 @bp_api.get('/country')
 @serializer()
 async def country(request: Request):
-    col = DB.get_col()
+    db: DB = request.app.ctx.db
     data = {'items': [], 'total': 0}
-    pip = [
-        {
-            '$match': {'status': 1}
-        },
-        {
-            '$group': {"_id": "$country", "total": {"$sum": 1}}
-        }
-    ]
-    async for item in col.aggregate(pipeline=pip):
+    async for item in db.query('status = 1', group_by='country', fields='id, country, count(country) total'):
         data['total'] += int(item['total'])
-        data['items'].append({'country': item['_id'], 'total': item['total']})
+        data['items'].append({'country': item['country'], 'total': item['total']})
     return data

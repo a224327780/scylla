@@ -1,6 +1,6 @@
-sanic==23.3.0
+sanic
 aiohttp
 pyquery
 python-dotenv
 aiosocksy
-cloudant
+aiosqlite
