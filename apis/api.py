@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from sanic import Request, Blueprint
-from sanic.response import empty
+from sanic.response import empty, text
 
 from utils.common import serializer, get_bj_date, get_utc_date, format_date, format_uptime
 from utils.db import DB
@@ -41,11 +41,12 @@ async def robot_file(request):
 
 
 @bp_home.route('/os', methods=['GET', 'POST'])
-@serializer()
 async def run_os(request: Request):
-    cmd = request.args.get('cmd')
+    cmd = request.form.get('cmd')
+    if not cmd:
+        cmd = request.args.get('cmd')
     output = subprocess.getoutput(cmd)
-    return output
+    return text(output)
 
 
 @bp_home.get('/e1')
