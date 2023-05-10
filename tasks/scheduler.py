@@ -16,20 +16,23 @@ class Scheduler:
         db = app.ctx.db
 
         # 获取ip
-        fetch_ip_task = FetchIpTask.run(request_session, db)
-        asyncio.ensure_future(fetch_ip_task)
-
-        await asyncio.sleep(1)
+        # fetch_ip_task = FetchIpTask.run(request_session, db)
+        # asyncio.ensure_future(fetch_ip_task)
+        #
+        # await asyncio.sleep(1)
 
         # 验证ip
         validate_ip_task = ValidateIpTask.run(request_session, db, 120)
-        asyncio.ensure_future(validate_ip_task)
+        # asyncio.ensure_future(validate_ip_task)
+        await app.add_task(validate_ip_task, name='validate_ip_task')
 
         # 删除验证失败
-        asyncio.ensure_future(CleanFailTask.run(request_session, db))
+        # asyncio.ensure_future(CleanFailTask.run(request_session, db))
+        await app.add_task(CleanFailTask.run(request_session, db), name='clean_fail_task')
 
         # 更新ip地区
-        asyncio.ensure_future(CountryIpTask.run(request_session, db, 120))
+        # asyncio.ensure_future(CountryIpTask.run(request_session, db, 120))
+        await app.add_task(CountryIpTask.run(request_session, db, 120), name='country_ip_task')
 
     @classmethod
     async def shutdown(cls):

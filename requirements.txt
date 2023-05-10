@@ -3,4 +3,4 @@ aiohttp
 pyquery
 python-dotenv
 aiosocksy
-aiosqlite
+aiomysql

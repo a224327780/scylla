@@ -1,73 +1,71 @@
-import asyncio
 import logging
-from pathlib import Path
-from sqlite3 import IntegrityError, DatabaseError
+import os
+import platform
+import ssl
 
-import aiosqlite
+import aiomysql
+from pymysql import DatabaseError, IntegrityError
+
+ssl_file = '/etc/ssl/certs/ca-certificates.crt' if platform.system() == 'Linux' else '/etc/ssl/cert.pem'
+ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+ctx.load_verify_locations(cafile=ssl_file)
 
 
 class DB:
-    client = None
+    pool = None
 
     def __init__(self, loop=None):
         self.table_name = 'scylla'
+        self.loop = loop
         self.logger = logging.getLogger('sanic.root')
 
     async def conn(self):
-        db_file = Path(__file__).parent.parent / 'data.db'
-        sql_data = None
-        if not db_file.is_file():
-            sql_file = db_file.parent / 'table.sql'
-            sql_data = sql_file.read_text()
-
-        self.client = await aiosqlite.connect(db_file, timeout=10)
-        self.client.row_factory = aiosqlite.Row
-        if sql_data:
-            self.logger.info('Initialize Table.')
-            for sql in sql_data.split(';\n'):
-                if sql.strip():
-                    self.logger.info(f'Execute sql:\n{sql}')
-                    await self.client.execute(sql)
-            await self.client.commit()
+        conn_params = {
+            'host': os.getenv('DB_HOST', 'aws.connect.psdb.cloud'),
+            'user': os.getenv('DB_USER', 'i8d54r063op9abhgerei'),
+            'password': os.getenv('DB_PASSWORD', ''),
+            'db': os.getenv('DB_NAME', 'db0'),
+            'port': int(os.getenv('DB_PORT', 3306)),
+            'cursorclass': aiomysql.cursors.DictCursor,
+            'charset': 'utf8mb4',
+        }
+        self.pool = await aiomysql.create_pool(loop=self.loop, ssl=ctx, **conn_params)
 
     async def insert(self, data: dict):
-        columns = ', '.join(data.keys())
-        placeholders = ', '.join('?' * len(data))
-        sql = f'INSERT INTO {self.table_name} ({columns}) VALUES ({placeholders})'
-        values = [int(x) if isinstance(x, bool) else x for x in data.values()]
-        try:
-            await self.client.execute(sql, values)
-            await self.client.commit()
-        except IntegrityError:
-            pass
-        except DatabaseError as e:
-            msg = str(e)
-            if 'locked' not in msg:
-                raise e
-            await asyncio.sleep(10)
-            await self.insert(data)
+        sqlcmd = (
+            f"INSERT INTO {self.table_name} ({', '.join(data.keys())}) "
+            f"VALUES (%({')s, %('.join(data.keys())})s)")
+        await self.execute(sqlcmd, data)
+
+    async def batch_insert(self, data: list):
+        sqlcmd = (
+            f"INSERT INTO {self.table_name} ({', '.join(data[0].keys())}) "
+            f"VALUES (%({')s, %('.join(data[0].keys())})s)")
+        await self.execute(sqlcmd, data)
 
     async def update(self, _id, data: dict):
-        columns = ', '.join('{} = ?'.format(k) for k in data)
-        sql = f'UPDATE {self.table_name} SET {columns} where id = ?'
+        columns = ', '.join('{} = %s'.format(k) for k in data)
+        sql = f'UPDATE {self.table_name} SET {columns} where id = %s'
         values = list(data.values())
         values.append(_id)
-        await self.client.execute(sql, values)
-        await self.client.commit()
+        await self.execute(sql, values)
 
-    async def get_pending_validation(self, limit=200):
-        async for row in self.query(limit=limit, order_by='status asc, last_time asc'):
-            yield row
+    async def get_pending_validation(self, limit=5):
+        # async for row in self.query(limit=limit, order_by='status asc, last_time asc'):
+        #     yield row
+        return await self.query(limit=limit, order_by='status asc, last_time asc')
 
     async def get_country_empty(self, limit=50):
         where = "status = 1 and country = ''"
-        async for row in self.query(where, limit=limit):
-            yield row
+        # async for row in self.query(where, limit=limit):
+        #     yield row
+        return await self.query(where, limit=limit)
 
     async def get_fail(self, limit=200):
         where = 'status = 2 and fail_count >= 3'
-        async for row in self.query(where, limit=limit, fields='id'):
-            yield row
+        # async for item in self.query(where, limit=limit, fields='id'):
+        #     yield item
+        return await self.query(where, limit=limit, fields='id')
 
     async def query(self, where=None, order_by=None, fields=None, limit=50, offset=0, group_by=None):
         if fields is None:
@@ -78,15 +76,41 @@ class DB:
         order = f' order by {order_by}' if order_by else ''
         group = f' group by {group_by}' if group_by else ''
         sql = f"SELECT {fields} FROM {self.table_name} where {where}{order}{group} limit {offset}, {limit}"
-        async with self.client.execute(sql) as cursor:
-            async for row in cursor:
-                yield row
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                try:
+                    await cur.execute(sql)
+                    await conn.commit()
+                    return await cur.fetchall()
+                except DatabaseError as e:
+                    self.logger.error(f"<Error: {sql} {e}>")
+                return None
 
     async def delete(self, _id):
-        sql = f'DELETE FROM {self.table_name} where id = ?'
-        await self.client.execute(sql, (_id,))
-        await self.client.commit()
+        sql = f'DELETE FROM {self.table_name} where id = %s'
+        return await self.execute(sql, (_id,))
+
+    async def execute(self, sql, values=None):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                try:
+                    if 'insert' in sql and values and type(values) == list:
+                        await cur.executemany(sql, values)
+                    else:
+                        await cur.execute(sql, values)
+
+                    await conn.commit()
+                    if 'insert' in sql:
+                        return cur.lastrowid
+                    if 'update' in sql or 'delete' in sql:
+                        return cur.rowcount
+                except IntegrityError:
+                    pass
+                except Exception as e:
+                    self.logger.error(f"<Error: {sql} {e}>")
+                return None
 
     async def close(self):
-        if self.client:
-            await self.client.close()
+        if self.pool:
+            self.pool.close()
+            await self.pool.wait_closed()

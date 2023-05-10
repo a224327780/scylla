@@ -15,6 +15,7 @@ from utils.log import DEFAULT_LOGGING
 app = Sanic('scylla', log_config=DEFAULT_LOGGING)
 app.config.update_config(config)
 
+
 app.static('/favicon.ico', 'static/favicon.png')
 app.blueprint(bp_home)
 app.blueprint(bp_api)

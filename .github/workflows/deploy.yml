@@ -2,7 +2,7 @@ name: Okteto
 
 on:
   push:
-    branches: [ master ]
+    branches: [ dev ]
     paths-ignore:
       - '.github/workflows/deploy.yml'
       - 'docker-compose.yaml'
