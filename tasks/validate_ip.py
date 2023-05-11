@@ -7,7 +7,7 @@ from utils.common import get_bj_date, get_uptime
 class ValidateIpTask(BaseTask):
 
     async def process_start_urls(self):
-        async for item in self.db.query(limit=50, order_by='status asc, last_time asc'):
+        async for item in self.db.query(limit=100, order_by='status asc, last_time asc'):
             url = 'http://www.gstatic.com/generate_204'
             scheme = item['proxy_type'].lower().replace('https', 'http')
             proxy = f"{scheme}://{item['id']}:{item['port']}"

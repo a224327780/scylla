@@ -96,7 +96,7 @@ class DB:
                 except IntegrityError:
                     pass
                 except Exception as e:
-                    self.logger.error(f"<Error: {sql} {e}>")
+                    self.logger.error(f"<Error: {e}\n {sql}\n{values}>")
                 return None
 
     async def close(self):
