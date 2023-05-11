@@ -4,12 +4,7 @@ services:
     build:
       context: .
     scale: 1
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
     ports:
       - 8080
-    volumes:
-      - scylla_data:/data/python/scylla
-
-volumes:
-  scylla_data:
-    driver_opts:
-      size: 128Mi
