@@ -38,7 +38,7 @@ def md5(string: str):
 
 
 def diff_date_seconds(last_date):
-    a = datetime.strptime(last_date, '%Y-%m-%d %H:%M:%S')
+    a = datetime.strptime(str(last_date), '%Y-%m-%d %H:%M:%S')
     b = datetime.strptime(get_bj_date(), '%Y-%m-%d %H:%M:%S')
     return (b - a).seconds
 
