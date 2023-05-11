@@ -6,7 +6,8 @@ class CountryIpTask(BaseTask):
 
     async def process_start_urls(self):
         ip_list = []
-        async for item in self.db.get_country_empty():
+        where = "status = 1 and country = ''"
+        async for item in self.db.query(where, limit=50):
             ip_list.append(item['id'])
 
         if len(ip_list):

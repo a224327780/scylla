@@ -6,7 +6,14 @@ import ssl
 import aiomysql
 from pymysql import DatabaseError, IntegrityError
 
-ssl_file = '/etc/ssl/certs/ca-certificates.crt' if platform.system() == 'Linux' else '/etc/ssl/cert.pem'
+platform_name = platform.system()
+if platform_name == 'Linux':
+    ssl_file = '/etc/ssl/certs/ca-certificates.crt'
+elif 'Win' in platform_name:
+    ssl_file = 'cacert.pem'
+else:
+    ssl_file = '/etc/ssl/cert.pem'
+
 ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 ctx.load_verify_locations(cafile=ssl_file)
 
@@ -35,37 +42,20 @@ class DB:
         sqlcmd = (
             f"INSERT INTO {self.table_name} ({', '.join(data.keys())}) "
             f"VALUES (%({')s, %('.join(data.keys())})s)")
-        await self.execute(sqlcmd, data)
+        return await self.execute(sqlcmd, data)
 
     async def batch_insert(self, data: list):
         sqlcmd = (
             f"INSERT INTO {self.table_name} ({', '.join(data[0].keys())}) "
             f"VALUES (%({')s, %('.join(data[0].keys())})s)")
-        await self.execute(sqlcmd, data)
+        return await self.execute(sqlcmd, data)
 
     async def update(self, _id, data: dict):
         columns = ', '.join('{} = %s'.format(k) for k in data)
         sql = f'UPDATE {self.table_name} SET {columns} where id = %s'
         values = list(data.values())
         values.append(_id)
-        await self.execute(sql, values)
-
-    async def get_pending_validation(self, limit=5):
-        # async for row in self.query(limit=limit, order_by='status asc, last_time asc'):
-        #     yield row
-        return await self.query(limit=limit, order_by='status asc, last_time asc')
-
-    async def get_country_empty(self, limit=50):
-        where = "status = 1 and country = ''"
-        # async for row in self.query(where, limit=limit):
-        #     yield row
-        return await self.query(where, limit=limit)
-
-    async def get_fail(self, limit=200):
-        where = 'status = 2 and fail_count >= 3'
-        # async for item in self.query(where, limit=limit, fields='id'):
-        #     yield item
-        return await self.query(where, limit=limit, fields='id')
+        return await self.execute(sql, values)
 
     async def query(self, where=None, order_by=None, fields=None, limit=50, offset=0, group_by=None):
         if fields is None:
@@ -80,11 +70,10 @@ class DB:
             async with conn.cursor() as cur:
                 try:
                     await cur.execute(sql)
-                    await conn.commit()
-                    return await cur.fetchall()
+                    async for row in cur:
+                        yield row
                 except DatabaseError as e:
                     self.logger.error(f"<Error: {sql} {e}>")
-                return None
 
     async def delete(self, _id):
         sql = f'DELETE FROM {self.table_name} where id = %s'
