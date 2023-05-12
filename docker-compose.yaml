@@ -6,5 +6,6 @@ services:
     scale: 1
     environment:
       - DB_PASSWORD=${DB_PASSWORD}
+      - REDIS_URI=${REDIS_URI}
     ports:
       - 8080

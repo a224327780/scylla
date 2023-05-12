@@ -91,7 +91,7 @@ class DB:
 
                     await conn.commit()
                     if 'insert' in sql:
-                        return cur.lastrowid
+                        return cur.rowcount if type(values) == list else cur.lastrowid
                     if 'update' in sql or 'delete' in sql:
                         return cur.rowcount
                 except IntegrityError:

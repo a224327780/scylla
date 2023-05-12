@@ -1,6 +1,7 @@
 import os
 from traceback import format_exc
 
+from aioredis import from_url
 from sanic import Sanic
 from sanic import json as json_response
 from sanic.log import logger
@@ -56,6 +57,7 @@ async def setup_db(_app: Sanic, loop) -> None:
     _app.ctx.request_session = ClientSession(connector=ProxyConnector(), request_class=ProxyClientRequest, loop=loop)
     _app.ctx.db = DB(loop=loop)
     await _app.ctx.db.conn()
+    _app.ctx.redis = await from_url(config.REDIS_URI, decode_responses=True)
 
 
 @app.listener('after_server_start')
@@ -66,6 +68,7 @@ async def setup_scheduler(_app: Sanic, loop) -> None:
 @app.listener('before_server_stop')
 async def close_db(_app: Sanic, loop) -> None:
     await Scheduler.shutdown()
+    await _app.ctx.redis.close()
     await _app.ctx.db.close()
     await _app.ctx.request_session.close()
 
