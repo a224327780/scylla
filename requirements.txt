@@ -4,3 +4,4 @@ pyquery
 python-dotenv
 aiosocksy
 aiomysql
+aioredis
