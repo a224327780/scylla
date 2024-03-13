@@ -8,7 +8,7 @@ class ValidateIpTask(BaseTask):
 
     async def process_start_urls(self):
         validate_url = 'http://www.gstatic.com/generate_204'
-        async for item in self.col.find({}).sort([('status', 1), ('last_time', 1)]).limit(100):
+        async for item in self.col.find({}).sort([('status', 1), ('last_time', 1)]).limit(200):
             scheme = item['proxy_type'].lower().replace('https', 'http')
             proxy = f"{scheme}://{item['_id']}:{item['port']}"
             data = dict(item)

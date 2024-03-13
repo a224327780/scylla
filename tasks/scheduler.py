@@ -22,7 +22,7 @@ class Scheduler:
         await asyncio.sleep(5)
 
         # 验证ip
-        validate_ip_task = app.add_task(ValidateIpTask.run(request_session, 600))
+        validate_ip_task = app.add_task(ValidateIpTask.run(request_session, 300))
         logger.debug(validate_ip_task)
 
         # 删除验证失败
