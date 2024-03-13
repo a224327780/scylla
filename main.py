@@ -42,7 +42,8 @@ async def catch_anything(request, exception):
         code = exception.status_code
     elif hasattr(exception, 'status'):
         code = exception.status
-    logger.exception(exception)
+
+    logger.error(exception) if code == 404 else logger.exception(exception)
     data = fail(message, format_exc(), code)
     if code == 777:
         code = 200
@@ -55,23 +56,20 @@ async def setup_db(_app: Sanic, loop) -> None:
     from aiohttp import ClientSession
     from aiosocksy.connector import ProxyConnector, ProxyClientRequest
     _app.ctx.request_session = ClientSession(connector=ProxyConnector(), request_class=ProxyClientRequest, loop=loop)
-    _app.ctx.db = DB(loop=loop)
-    await _app.ctx.db.conn()
     _app.ctx.redis = await from_url(config.REDIS_URI, decode_responses=True)
+    DB.init_db(loop, 'db1', 'scylla')
 
 
-@app.listener('after_server_start')
-async def setup_scheduler(_app: Sanic, loop) -> None:
-    await _app.add_task(Scheduler.run(_app))
-
+# @app.listener('after_server_start')
+# async def setup_scheduler(_app: Sanic, loop) -> None:
+#     await Scheduler.run(_app)
+#
 
 @app.listener('before_server_stop')
 async def close_db(_app: Sanic, loop) -> None:
     await Scheduler.shutdown()
     await _app.ctx.redis.close()
-    await _app.ctx.db.close()
-    await _app.ctx.request_session.close()
-
+    DB.close_db()
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 8080)), access_log=config.DEV, dev=False, fast=False)

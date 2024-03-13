@@ -1,4 +1,4 @@
-FROM python:3.8-bullseye
+FROM ghcr.io/a224327780/python
 
 WORKDIR /data/python/scylla
 

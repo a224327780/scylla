@@ -7,7 +7,7 @@ from sanic.response import empty, text
 from utils.common import serializer, get_bj_date, get_utc_date, format_date, format_uptime
 from utils.db import DB
 
-bp_api = Blueprint('api', url_prefix='api')
+bp_api = Blueprint('api', url_prefix='v1')
 bp_home = Blueprint('home')
 
 
@@ -58,15 +58,22 @@ async def envs(request):
 @bp_api.get('/proxies')
 @serializer()
 async def proxies(request: Request):
-    db: DB = request.app.ctx.db
+    col = DB.get_col()
     data = []
+    country = request.args.get('country')
+    proxy_type = request.args.get('type')
+
     page = int(request.args.get('page', 1))
-    limit = int(request.args.get('limit', 20))
+    limit = int(request.args.get('limit', 5))
     offset = (page - 1) * limit
-    where = "status = 1 and country <> ''"
-    async for item in db.query(where, order_by='last_time desc', limit=limit, offset=offset):
+    cond = {'status': 1, 'country': {'$ne': ''}}
+    if country:
+        cond['country'] = country
+    if proxy_type:
+        cond['proxy_type'] = proxy_type
+    async for item in col.find(cond).sort('last_time', -1).limit(limit).skip(offset):
         proxy = {
-            'ip': item['id'],
+            'ip': item['_id'],
             'port': item['port'],
             'type': item['proxy_type'],
             'country': item['country'],
@@ -74,15 +81,4 @@ async def proxies(request: Request):
             'last_check': format_date(item['last_time'])
         }
         data.append(proxy)
-    return data
-
-
-@bp_api.get('/country')
-@serializer()
-async def country(request: Request):
-    db: DB = request.app.ctx.db
-    data = {'items': [], 'total': 0}
-    async for item in db.query('status = 1', group_by='country', fields='id, country, count(country) total'):
-        data['total'] += int(item['total'])
-        data['items'].append({'country': item['country'], 'total': item['total']})
     return data

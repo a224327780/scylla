@@ -15,8 +15,8 @@ class FetchIpTask(BaseTask):
         async for (name, extractor) in get_extractors():
             extractor.name = name
             urls = await extractor.urls()
-            # if not urls or name != 'proxyscrape':
-            #     continue
+            if extractor.status != 1 or not urls:
+                continue
 
             request_config = extractor.request_config
             if request_config:
@@ -40,10 +40,10 @@ class FetchIpTask(BaseTask):
                 item['name'] = name
                 proxy = get_item_proxy(item)
                 _id = proxy.pop('ip')
-                proxy['id'] = _id
+                proxy['_id'] = _id
                 self.proxy_count += 1
-                await self.db.insert(proxy)
                 self.logger.info(f'[{name}] fetch ip: {_id} in queue.')
+                self.col.update_one({'_id': _id}, {'$set': proxy}, True)
             except Exception as e:
                 self.logger.error(f'[{name}] parse error: {e}\n{item}')
 

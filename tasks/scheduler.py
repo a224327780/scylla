@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from sanic import Sanic
 
@@ -13,23 +14,24 @@ class Scheduler:
     @classmethod
     async def run(cls, app: Sanic):
         request_session = app.ctx.request_session
-        db = app.ctx.db
+        logger = logging.getLogger('sanic.root')
 
         # 获取ip
-        fetch_ip_task = FetchIpTask.run(request_session, db)
-        asyncio.ensure_future(fetch_ip_task)
-
-        await asyncio.sleep(1)
+        fetch_ip_task = app.add_task(FetchIpTask.run(request_session))
+        logger.debug(fetch_ip_task)
+        await asyncio.sleep(5)
 
         # 验证ip
-        validate_ip_task = ValidateIpTask.run(request_session, db, 120)
-        asyncio.ensure_future(validate_ip_task)
+        validate_ip_task = app.add_task(ValidateIpTask.run(request_session, 600))
+        logger.debug(validate_ip_task)
 
         # 删除验证失败
-        asyncio.ensure_future(CleanFailTask.run(request_session, db))
+        clean_fail_ip_task = app.add_task(CleanFailTask.run(request_session, 1800))
+        logger.debug(clean_fail_ip_task)
 
         # 更新ip地区
-        asyncio.ensure_future(CountryIpTask.run(request_session, db, 120))
+        update_ip_country_task = app.add_task(CountryIpTask.run(request_session, 600))
+        logger.debug(update_ip_country_task)
 
     @classmethod
     async def shutdown(cls):

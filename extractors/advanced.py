@@ -6,7 +6,7 @@ from extractors.base import BaseExtractor
 class Advanced(BaseExtractor):
 
     async def urls(self) -> [str]:
-        return ['https://advanced.name/freeproxy']
+        return [f'https://advanced.name/freeproxy?page={i}' for i in range(1, 3)]
 
     async def parse(self, doc):
         elements = doc('#table_proxies tbody tr')
@@ -24,5 +24,4 @@ class Advanced(BaseExtractor):
                     proxy_type = t
                     break
 
-            is_cn = 1 if country == 'CN' else 0
-            yield {'ip': ip, 'port': port, 'proxy_type': proxy_type, 'is_cn': is_cn}
+            yield {'ip': ip, 'port': port, 'proxy_type': proxy_type, 'country': country}

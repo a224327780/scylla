@@ -116,6 +116,8 @@ async def get_extractors():
 def get_item_proxy(data):
     if 'country' not in data:
         data['country'] = ''
+    if data['country']:
+        data['country'] = data['country'].upper()
     data['uptime'] = 0
     data['speed'] = 0
     data['status'] = 0

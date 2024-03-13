@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import re
 from asyncio import iscoroutinefunction, coroutines
 from types import AsyncGeneratorType
 from typing import Optional
@@ -15,13 +14,13 @@ class BaseTask:
     worker_tasks = []
     request_session: Optional[ClientSession] = None
     close_request_session = False
-    db: Optional[DB] = None
+    col = None
 
     @classmethod
-    async def run(cls, request_session, db: DB, wait_for=3600):
+    async def run(cls, request_session, wait_for=3600):
         ins = cls()
         ins.request_session = request_session
-        ins.db = db
+        ins.col = DB.get_col()
         await ins.start_worker(wait_for)
 
     def __init__(self):
@@ -95,10 +94,13 @@ class BaseTask:
 
         callback_result = None
         if callback is not None:
-            if iscoroutinefunction(callback):
-                callback_result = await callback(response, metadata)
-            else:
-                callback_result = callback(response, metadata)
+            try:
+                if iscoroutinefunction(callback):
+                    callback_result = await callback(response, metadata)
+                else:
+                    callback_result = callback(response, metadata)
+            except Exception as e:
+                self.logger.exception(e)
         return callback_result, response
 
     async def fetch(self, url: str, method='GET', **request_config):

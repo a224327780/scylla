@@ -2,13 +2,13 @@ from tasks.base import BaseTask
 
 
 class CountryIpTask(BaseTask):
+
     api = 'http://ip-api.com/batch'
 
     async def process_start_urls(self):
         ip_list = []
-        where = "status = 1 and country = ''"
-        async for item in self.db.query(where, limit=50):
-            ip_list.append(item['id'])
+        async for item in self.col.find({'country': ''}).limit(30):
+            ip_list.append(item['_id'])
 
         if len(ip_list):
             yield self.request(url=self.api, callback=self.update_country, timeout=15, json=ip_list)
@@ -23,6 +23,5 @@ class CountryIpTask(BaseTask):
         for item in data:
             ip = item['query']
             country_code = item['countryCode']
-            is_cn = 1 if country_code in ['CN', 'HK'] else 0
             self.logger.info(f"{ip} -> {country_code}")
-            await self.db.update(ip, {'country': country_code, 'is_cn': is_cn})
+            await self.col.update_one({'_id': ip}, {'$set': {'country': country_code}})

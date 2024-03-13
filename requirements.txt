@@ -3,5 +3,6 @@ aiohttp
 pyquery
 python-dotenv
 aiosocksy
-aiomysql
+motor
 aioredis
+certifi
