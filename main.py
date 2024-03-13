@@ -16,7 +16,6 @@ from utils.log import DEFAULT_LOGGING
 app = Sanic('scylla', log_config=DEFAULT_LOGGING)
 app.config.update_config(config)
 
-
 app.static('/favicon.ico', 'static/favicon.png')
 app.blueprint(bp_home)
 app.blueprint(bp_api)
@@ -70,6 +69,7 @@ async def close_db(_app: Sanic, loop) -> None:
     await Scheduler.shutdown()
     await _app.ctx.redis.close()
     DB.close_db()
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 8080)), access_log=config.DEV, dev=False, fast=False)

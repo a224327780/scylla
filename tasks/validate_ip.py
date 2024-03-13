@@ -12,6 +12,7 @@ class ValidateIpTask(BaseTask):
             scheme = item['proxy_type'].lower().replace('https', 'http')
             proxy = f"{scheme}://{item['_id']}:{item['port']}"
             data = dict(item)
+            data['proxy'] = proxy
             data['begin_time'] = time.perf_counter()
             yield self.request(url=validate_url, callback=self.validate, metadata=data, proxy=proxy)
 
@@ -31,4 +32,4 @@ class ValidateIpTask(BaseTask):
             'uptime': get_uptime(item['last_time'], item['uptime']) if is_ok else 0
         }
         await self.col.update_one({'_id': item['_id']}, {'$set': data})
-        self.logger.info(f'validate ip:{item["_id"]} -> {status_msg}')
+        self.logger.info(f'validate ip:{item["proxy"]} -> {status_msg}')
