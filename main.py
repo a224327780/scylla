@@ -60,10 +60,10 @@ async def setup_db(_app: Sanic, loop) -> None:
     DB.init_db(loop, 'db1', 'scylla')
 
 
-# @app.listener('after_server_start')
-# async def setup_scheduler(_app: Sanic, loop) -> None:
-#     await Scheduler.run(_app)
-#
+@app.listener('after_server_start')
+async def setup_scheduler(_app: Sanic, loop) -> None:
+    await Scheduler.run(_app)
+
 
 @app.listener('before_server_stop')
 async def close_db(_app: Sanic, loop) -> None:
