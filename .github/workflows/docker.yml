@@ -3,6 +3,9 @@ name: docker
 on:
   push:
     branches: [ master ]
+    paths-ignore:
+      - '.github/workflows/docker.yml'
+
 
 jobs:
   build:
@@ -29,3 +32,6 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/a224327780/scylla:latest
+
+      - name: Deploy
+        run: curl 'https://api.render.com/deploy/srv-cnonagqcn0vc73bi1hig?key=kk6_Aq4tj84'
