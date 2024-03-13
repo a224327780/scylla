@@ -13,6 +13,8 @@ class Scheduler:
 
     @classmethod
     async def run(cls, app: Sanic):
+        setattr(asyncio.sslproto._SSLProtocolTransport, "_start_tls_compatible", True)
+
         request_session = app.ctx.request_session
         logger = logging.getLogger('sanic.root')
 
