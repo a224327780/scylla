@@ -16,4 +16,7 @@ class HideMy(BaseExtractor):
             proxy_type = element_td.eq(4).text().strip()
             if not port:
                 continue
+            if ',' in proxy_type:
+                proxy_type = proxy_type.split(',')
+                proxy_type = proxy_type[1].strip()
             yield {'ip': ip, 'port': port, 'proxy_type': proxy_type}
