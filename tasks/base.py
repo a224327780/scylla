@@ -43,28 +43,31 @@ class BaseTask:
     async def start_worker(self, sleep=3600):
         work_name = self.__class__.__name__
         while True:
-            self.logger.info(f'start {work_name}.')
-            worker_tasks = []
-            async for item in self.process_start_urls():
-                if coroutines.iscoroutine(item):
-                    worker_tasks.append(item)
+            try:
+                self.logger.info(f'start {work_name}.')
+                worker_tasks = []
+                async for item in self.process_start_urls():
+                    if coroutines.iscoroutine(item):
+                        worker_tasks.append(item)
 
-            if worker_tasks:
-                results = await asyncio.gather(
-                    *worker_tasks, return_exceptions=True
-                )
-                for task_result in results:
-                    if not isinstance(task_result, RuntimeError) and type(task_result) is tuple:
-                        callback_result = task_result[0]
-                        response = task_result[1]
-                        if isinstance(callback_result, AsyncGeneratorType):
-                            await self.process_async_callback(callback_result, response)
-                    else:
-                        self.logger.error(f'[{work_name}] <Error: {task_result}>')
-                    await self.close_request()
-                await self.after_start_worker()
-            self.logger.info(f'[{work_name}]: Wait {sleep} seconds.')
-            await asyncio.sleep(sleep)
+                if worker_tasks:
+                    results = await asyncio.gather(
+                        *worker_tasks, return_exceptions=True
+                    )
+                    for task_result in results:
+                        if not isinstance(task_result, RuntimeError) and type(task_result) is tuple:
+                            callback_result = task_result[0]
+                            response = task_result[1]
+                            if isinstance(callback_result, AsyncGeneratorType):
+                                await self.process_async_callback(callback_result, response)
+                        else:
+                            self.logger.error(f'[{work_name}] <Error: {task_result}>')
+                        await self.close_request()
+                    await self.after_start_worker()
+                self.logger.info(f'[{work_name}]: Wait {sleep} seconds.')
+                await asyncio.sleep(sleep)
+            except Exception as e:
+                self.logger.exception(e)  
 
     @property
     def current_request_session(self):
@@ -93,7 +96,7 @@ class BaseTask:
             return None, None
 
         callback_result = None
-        if callback is not None:
+        if callback is not None and response:
             try:
                 if iscoroutinefunction(callback):
                     callback_result = await callback(response, metadata)

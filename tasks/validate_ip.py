@@ -6,15 +6,18 @@ from utils.common import get_bj_date, get_uptime
 
 class ValidateIpTask(BaseTask):
 
+    concurrency = 20
+
     async def process_start_urls(self):
-        validate_url = 'http://www.gstatic.com/generate_204'
-        async for item in self.col.find({}).sort([('status', 1), ('last_time', 1)]).limit(200):
+        async for item in self.col.find({'country': {'$ne': ''}}).sort([('status', 1), ('last_time', 1)]).limit(200):
+            validate_url = 'http://connect.rom.miui.com/generate_204' if item['country'] == 'CN' else 'http://cp.cloudflare.com/'
             scheme = item['proxy_type'].lower().replace('https', 'http')
             proxy = f"{scheme}://{item['_id']}:{item['port']}"
             data = dict(item)
             data['proxy'] = proxy
+            data['validate_url'] = validate_url
             data['begin_time'] = time.perf_counter()
-            yield self.request(url=validate_url, callback=self.validate, metadata=data, proxy=proxy)
+            yield self.request(url=validate_url, callback=self.validate, metadata=data, proxy=proxy, timeout=30)
 
     async def validate(self, response, item):
         end_time = time.perf_counter()
@@ -32,4 +35,4 @@ class ValidateIpTask(BaseTask):
             'uptime': get_uptime(item['last_time'], item['uptime']) if is_ok else 0
         }
         await self.col.update_one({'_id': item['_id']}, {'$set': data})
-        self.logger.info(f'validate ip:{item["proxy"]} -> {status_msg}')
+        self.logger.info(f'validate proxy: {item["proxy"]} -> {status_msg}')

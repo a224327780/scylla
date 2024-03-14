@@ -3,7 +3,7 @@ import copy
 import pyquery
 
 from tasks.base import BaseTask
-from utils.common import get_extractors, get_item_proxy
+from utils.common import get_extractors, get_item_proxy, is_internal_ip
 
 
 class FetchIpTask(BaseTask):
@@ -40,10 +40,18 @@ class FetchIpTask(BaseTask):
                 item['name'] = name
                 proxy = get_item_proxy(item)
                 _id = proxy.pop('ip')
+
+                if is_internal_ip(ip):
+                    continue
+
+                data = self.col.find_one({'_id': _id})
+                if data:
+                    continue
+
                 proxy['_id'] = _id
                 self.proxy_count += 1
                 self.logger.info(f'[{name}] fetch ip: {_id} in queue.')
-                self.col.update_one({'_id': _id}, {'$set': proxy}, True)
+                self.col.insert_one(proxy)
             except Exception as e:
                 self.logger.error(f'[{name}] parse error: {e}\n{item}')
 

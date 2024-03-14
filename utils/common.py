@@ -127,3 +127,19 @@ def get_item_proxy(data):
     data['proxy_type'] = data['proxy_type'].strip().upper()
     data['port'] = int(str(data['port']).strip())
     return data
+
+
+def ip_into_int(ip):
+    return reduce(lambda x, y: (x << 8) + y, map(int, ip.split('.')))
+
+
+# 方法1：掩码对比
+def is_internal_ip(ip_str):
+    ip_int = ip_into_int(ip_str)
+    net_a = ip_into_int('10.255.255.255') >> 24
+    net_b = ip_into_int('172.31.255.255') >> 20
+    net_c = ip_into_int('192.168.255.255') >> 16
+    isp = ip_into_int('100.127.255.255') >> 22
+    dhcp = ip_into_int('169.254.255.255') >> 16
+    return ip_int >> 24 == net_a or ip_int >> 20 == net_b or ip_int >> 16 == net_c or ip_int >> 22 == isp or ip_int >> 16 == dhcp
+    

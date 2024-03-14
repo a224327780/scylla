@@ -13,21 +13,18 @@ class Scheduler:
 
     @classmethod
     async def run(cls, app: Sanic):
-        setattr(asyncio.sslproto._SSLProtocolTransport, "_start_tls_compatible", True)
-
         request_session = app.ctx.request_session
         logger = logging.getLogger('sanic.root')
 
         # 获取ip
-        fetch_ip_task = app.add_task(FetchIpTask.run(request_session))
-        logger.debug(fetch_ip_task)
-        await asyncio.sleep(5)
+        # fetch_ip_task = app.add_task(FetchIpTask.run(request_session))
+        # logger.debug(fetch_ip_task)
 
         # 验证ip
         validate_ip_task = app.add_task(ValidateIpTask.run(request_session, 300))
         logger.debug(validate_ip_task)
 
-        # 删除验证失败
+        # # 删除验证失败
         clean_fail_ip_task = app.add_task(CleanFailTask.run(request_session, 1800))
         logger.debug(clean_fail_ip_task)
 
