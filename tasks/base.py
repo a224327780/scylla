@@ -67,7 +67,7 @@ class BaseTask:
                 self.logger.info(f'[{work_name}]: Wait {sleep} seconds.')
                 await asyncio.sleep(sleep)
             except Exception as e:
-                self.logger.exception(e)  
+                self.logger.exception(e)
 
     @property
     def current_request_session(self):
@@ -81,22 +81,19 @@ class BaseTask:
             await self.request_session.close()
 
     async def request(self, url: str, callback=None, metadata=None, **request_config):
+        response = None
         try:
             async with self.sem:
                 response = await self.fetch(url, **request_config)
+                if response and not response.ok:
+                    self.logger.error(f"<Error: {url} {response.status}>")
         except asyncio.TimeoutError:
-            response = None
             self.logger.error(f"<Error: {url} Timeout>")
         except Exception as e:
-            response = None
             self.logger.error(f"<Error: {url} {e}>")
 
-        if response and not response.ok:
-            self.logger.error(f"<Error: {url} {response.status}>")
-            return None, None
-
         callback_result = None
-        if callback is not None and response:
+        if callback is not None:
             try:
                 if iscoroutinefunction(callback):
                     callback_result = await callback(response, metadata)
