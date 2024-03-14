@@ -17,8 +17,8 @@ class Scheduler:
         logger = logging.getLogger('sanic.root')
 
         # 获取ip
-        # fetch_ip_task = app.add_task(FetchIpTask.run(request_session))
-        # logger.debug(fetch_ip_task)
+        fetch_ip_task = app.add_task(FetchIpTask.run(request_session))
+        logger.debug(fetch_ip_task)
 
         # 验证ip
         validate_ip_task = app.add_task(ValidateIpTask.run(request_session, 300))
