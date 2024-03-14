@@ -41,7 +41,7 @@ class FetchIpTask(BaseTask):
                 proxy = get_item_proxy(item)
                 _id = proxy.pop('ip')
 
-                if is_internal_ip(ip):
+                if is_internal_ip(_id):
                     continue
 
                 data = self.col.find_one({'_id': _id})
