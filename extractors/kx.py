@@ -4,7 +4,7 @@ from extractors.base import BaseExtractor
 class KaiXin(BaseExtractor):
 
     async def urls(self) -> [str]:
-        return [f'http://www.kxdaili.com/dailiip/1/{i}.html{i}' for i in range(1, 3)]
+        return [f'http://www.kxdaili.com/dailiip/1/{i}.html' for i in range(1, 3)]
 
     async def parse(self, doc):
         elements = doc('table.active tr')
