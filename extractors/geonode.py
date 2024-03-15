@@ -7,7 +7,7 @@ class GeoNode(BaseExtractor):
 
     async def urls(self) -> [str]:
         api = 'https://proxylist.geonode.com/api/proxy-list'
-        return [f'{api}?filterUpTime=90&limit=300&page=1&sort_by=lastChecked&sort_type=desc']
+        return [f'{api}?filterUpTime=90&limit=100&page=1&sort_by=lastChecked&sort_type=desc']
 
     async def parse(self, document):
         html = document.html()

@@ -24,7 +24,7 @@ class Scheduler:
         validate_ip_task = app.add_task(ValidateIpTask.run(request_session, 300))
         logger.debug(validate_ip_task)
 
-        # # 删除验证失败
+        # 删除验证失败
         clean_fail_ip_task = app.add_task(CleanFailTask.run(request_session, 1800))
         logger.debug(clean_fail_ip_task)
 

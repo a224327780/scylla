@@ -13,14 +13,19 @@ class ValidateIpTask(BaseTask):
     async def process_start_urls(self):
         sort = [('status', 1), ('last_time', 1)]
         async for item in self.col.find({'country': {'$ne': ''}}).sort(sort).limit(200):
-            validate_url = self.cn_validate_url if item['country'] == 'CN' else self.no_cn_validate_url
-            scheme = item['proxy_type'].lower().replace('https', 'http')
-            proxy = f"{scheme}://{item['_id']}:{item['port']}"
-            data = dict(item)
-            data['proxy'] = proxy
-            data['validate_url'] = validate_url
-            data['begin_time'] = time.perf_counter()
-            yield self.request(url=validate_url, callback=self.validate, metadata=data, proxy=proxy, timeout=30)
+            data = self.get_start_url_data(item)
+            yield self.request(url=data['validate_url'], callback=self.validate, metadata=data,
+                               proxy=data['validate_url'], timeout=30)
+
+    def get_start_url_data(self, item):
+        validate_url = self.cn_validate_url if item['country'] == 'CN' else self.no_cn_validate_url
+        scheme = item['proxy_type'].lower().replace('https', 'http')
+        proxy = f"{scheme}://{item['_id']}:{item['port']}"
+        data = dict(item)
+        data['proxy'] = proxy
+        data['validate_url'] = validate_url
+        data['begin_time'] = time.perf_counter()
+        return data
 
     async def validate(self, response, item):
         end_time = time.perf_counter()

@@ -77,8 +77,45 @@ async def proxies(request: Request):
             'port': item['port'],
             'type': item['proxy_type'],
             'country': item['country'],
-            'uptime': format_uptime(item['uptime']),
+            # 'uptime': format_uptime(item['uptime']),
             'last_check': format_date(item['last_time'])
         }
         data.append(proxy)
+    return data
+
+
+@bp_api.get('/get')
+@serializer()
+async def proxy_get(request: Request):
+    col = DB.get_col()
+    pipeline = [
+        {'$match': {'status': 1}},
+        {'$sample': {'size': 1}},
+        {'$sort': {'last_time': -1}}
+    ]
+    data = []
+    async for item in col.aggregate(pipeline):
+        data = {
+            'ip': item['_id'],
+            'port': item['port'],
+            'type': item['proxy_type'],
+            'country': item['country'],
+            # 'uptime': format_uptime(item['uptime']),
+            'last_check': format_date(item['last_time'])
+        }
+    return data
+
+
+@bp_api.get('/count')
+@serializer()
+async def proxy_count(request: Request):
+    col = DB.get_col()
+    data = {'items': [], 'total': 0}
+    pipeline = [
+        {'$match': {'status': 1}},
+        {'$group': {'_id': '$country', 'total': {"$sum": 1}}}
+    ]
+    async for item in col.aggregate(pipeline):
+        data['total'] += int(item['total'])
+        data['items'].append({'country': item['_id'], 'total': item['total']})
     return data

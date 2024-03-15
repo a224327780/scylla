@@ -1,5 +1,4 @@
 import re
-from urllib.parse import unquote
 
 from extractors.base import BaseExtractor
 
@@ -7,7 +6,7 @@ from extractors.base import BaseExtractor
 class Spys(BaseExtractor):
 
     async def urls(self) -> [str]:
-        return ['http://spys.one/en/free-proxy-list']
+        return ['https://spys.one/en/free-proxy-list/']
 
     async def parse(self, doc):
         elements = doc('tr[class^="spy1x"]')

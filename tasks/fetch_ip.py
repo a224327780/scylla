@@ -23,7 +23,7 @@ class FetchIpTask(BaseTask):
                 headers.update(request_config)
 
             for url in urls:
-                yield self.request(url=url, callback=self.parse_ip, metadata=extractor, timeout=15, headers=headers)
+                yield self.request(url=url, callback=self.parse_ip, metadata=extractor, headers=headers)
 
     async def parse_ip(self, response, extractor):
         if response is None:
@@ -42,16 +42,18 @@ class FetchIpTask(BaseTask):
                 _id = proxy.pop('ip')
 
                 if is_internal_ip(_id):
+                    self.logger.warning(_id)
                     continue
 
-                data = self.col.find_one({'_id': _id})
+                data = await self.col.find_one({'_id': _id})
                 if data:
+                    self.logger.warning(f'{_id} already exists')
                     continue
 
                 proxy['_id'] = _id
                 self.proxy_count += 1
                 self.logger.info(f'[{name}] fetch ip: {_id} in queue.')
-                self.col.insert_one(proxy)
+                await self.col.insert_one(proxy)
             except Exception as e:
                 self.logger.error(f'[{name}] parse error: {e}\n{item}')
 

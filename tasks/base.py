@@ -86,7 +86,7 @@ class BaseTask:
             async with self.sem:
                 response = await self.fetch(url, **request_config)
                 if response and not response.ok:
-                    self.logger.error(f"<Error: {url} {response.status}>")
+                    self.logger.warning(f"<Error: {url} {response.status}>")
         except asyncio.TimeoutError:
             self.logger.error(f"<Error: {url} Timeout>")
         except Exception as e:

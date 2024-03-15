@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import inspect
 import math
@@ -143,4 +144,14 @@ def is_internal_ip(ip_str):
     isp = ip_into_int('100.127.255.255') >> 22
     dhcp = ip_into_int('169.254.255.255') >> 16
     return ip_int >> 24 == net_a or ip_int >> 20 == net_b or ip_int >> 16 == net_c or ip_int >> 22 == isp or ip_int >> 16 == dhcp
-    
+
+
+def b64(data: str) -> str:
+    try:
+        data = data.encode('ascii')
+        rem = len(data) % 4
+        if rem > 0:
+            data += b"=" * (4 - rem)
+        return base64.urlsafe_b64decode(data).decode('utf-8')
+    except ValueError:
+        return ''
