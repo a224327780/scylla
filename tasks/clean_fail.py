@@ -14,4 +14,4 @@ class CleanFailTask(BaseTask):
     async def after_start_worker(self):
         async for item in self.col.find({'status': 2, 'fail_count': {'$gte': 2}}).limit(500):
             await self.col.delete_one({'_id': item['_id']})
-            self.logger.info(f'delete fail ip: {item["id"]}')
+            self.logger.info(f'delete fail ip: {item["_id"]}')
