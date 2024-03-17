@@ -10,17 +10,8 @@ class ValidateIpTask(BaseTask):
     concurrency = 20
 
     async def process_start_urls(self):
-        now = datetime.now()
-        current_hour = now.hour
-
-        cond = {'status': {'$in': [0, 1]}}
-        limit = 200
-        if current_hour in [3, 6, 9]:
-            cond = {'status': 2, 'fail_count': {'$lt': 2}}
-            limit = 300
-
-        sort = [('status', 1), ('last_time', 1)]
-        async for item in self.col.find(cond).sort(sort).limit(limit):
+        sort = [('last_time', 1), ('status', 1)]
+        async for item in self.col.find({}).sort(sort).limit(300):
             validate_url = 'https://cp.cloudflare.com'
             scheme = item['proxy_type'].lower()
             proxy = f"{scheme}://{item['_id']}:{item['port']}"
