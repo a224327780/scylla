@@ -17,7 +17,7 @@ class Scheduler:
         logger = logging.getLogger('sanic.root')
 
         # 验证ip
-        validate_ip_task = app.add_task(ValidateIpTask.run(request_session, 300))
+        validate_ip_task = app.add_task(ValidateIpTask.run(request_session, app.config.VALIDATE_PROXY_TIME))
         logger.debug(validate_ip_task)
 
         # 删除验证失败
