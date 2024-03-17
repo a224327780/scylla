@@ -1,5 +1,4 @@
 import asyncio
-from datetime import datetime
 import time
 
 from tasks.base import BaseTask
@@ -11,10 +10,13 @@ class ValidateIpTask(BaseTask):
 
     async def process_start_urls(self):
         sort = [('last_time', 1), ('status', 1)]
-        async for item in self.col.find({}).sort(sort).limit(300):
-            validate_url = 'https://cp.cloudflare.com'
+        cond = {'fail_count': {'$lt': 2}}
+        async for item in self.col.find(cond).sort(sort).limit(300):
             scheme = item['proxy_type'].lower()
             proxy = f"{scheme}://{item['_id']}:{item['port']}"
+            # validate_url = 'https://cp.cloudflare.com'
+            validate_url = 'https://www.apple.com/library/test/success.html'
+
             if scheme != 'https':
                 validate_url = validate_url.replace('https', 'http')
 
@@ -23,7 +25,7 @@ class ValidateIpTask(BaseTask):
             data['validate_url'] = validate_url
             data['begin_time'] = time.perf_counter()
 
-            yield self.request(url=validate_url, callback=self.validate, metadata=data, proxy=proxy, timeout=30)
+            yield self.request(url=validate_url, callback=self.validate, metadata=data, proxy=proxy, timeout=20)
 
     async def validate(self, response, item):
         end_time = time.perf_counter()
@@ -48,8 +50,6 @@ class ValidateIpTask(BaseTask):
         try:
             async with self.sem:
                 response = await self.fetch(url, **request_config)
-                if response and not response.ok:
-                    self.logger.debug(f"<Error: {url} {response.status}>")
         except asyncio.TimeoutError:
             self.logger.debug(f"<Error: {url} Timeout>")
         except Exception as e:

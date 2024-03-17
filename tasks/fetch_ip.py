@@ -1,9 +1,10 @@
 import copy
+import ipaddress
 
 import pyquery
 
 from tasks.base import BaseTask
-from utils.common import get_extractors, get_item_proxy, is_internal_ip
+from utils.common import get_extractors, get_item_proxy
 
 
 class FetchIpTask(BaseTask):
@@ -41,7 +42,7 @@ class FetchIpTask(BaseTask):
                 proxy = get_item_proxy(item)
                 _id = proxy.pop('ip')
 
-                if is_internal_ip(_id):
+                if ipaddress.ip_address(_id).is_private:
                     self.logger.warning(_id)
                     continue
 
