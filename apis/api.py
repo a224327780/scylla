@@ -63,6 +63,7 @@ async def proxies(request: Request):
     country = request.args.get('country')
     proxy_type = request.args.get('type')
 
+    is_mjj = int(request.args.get('is_mjj', 0))
     page = int(request.args.get('page', 1))
     limit = int(request.args.get('limit', 5))
     offset = (page - 1) * limit
@@ -71,6 +72,10 @@ async def proxies(request: Request):
         cond['country'] = country
     if proxy_type:
         cond['proxy_type'] = proxy_type
+
+    if is_mjj > 0:
+        cond['is_mjj'] = 1
+
     async for item in col.find(cond).sort('last_time', -1).limit(limit).skip(offset):
         proxy = {
             'ip': item['_id'],
