@@ -18,7 +18,7 @@ class Scheduler:
         logger = logging.getLogger('sanic.root')
 
         # 验证ip-mjj
-        # validate_ip_mjj_task = app.add_task(ValidateMjj.run(3600 * 6))
+        # validate_ip_mjj_task = app.add_task(ValidateMjj.run(request_session))
         # logger.debug(validate_ip_mjj_task)
 
         # 验证ip
