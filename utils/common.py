@@ -126,6 +126,7 @@ def get_item_proxy(data):
     data['check_count'] = 0
     data['last_time'] = get_bj_date(-3600 * 12)
     data['fail_count'] = 0
+    data['is_mjj'] = -1
     data['proxy_type'] = data['proxy_type'].strip().upper()
     data['port'] = int(str(data['port']).strip())
     return data
