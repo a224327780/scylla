@@ -6,4 +6,3 @@ aiosocksy
 motor
 aioredis
 certifi
-requests

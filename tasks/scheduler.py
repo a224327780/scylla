@@ -7,7 +7,6 @@ from tasks.clean_fail import CleanFailTask
 from tasks.country_ip import CountryIpTask
 from tasks.fetch_ip import FetchIpTask
 from tasks.validate_ip import ValidateIpTask
-from tasks.validate_mjj import ValidateMjj
 
 
 class Scheduler:
@@ -16,10 +15,6 @@ class Scheduler:
     async def run(cls, app: Sanic):
         request_session = app.ctx.request_session
         logger = logging.getLogger('sanic.root')
-
-        # 验证ip-mjj
-        # validate_ip_mjj_task = app.add_task(ValidateMjj.run(request_session))
-        # logger.debug(validate_ip_mjj_task)
 
         # 验证ip
         validate_ip_task = app.add_task(ValidateIpTask.run(request_session, app.config.VALIDATE_PROXY_TIME))
