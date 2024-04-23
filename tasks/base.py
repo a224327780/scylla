@@ -34,6 +34,9 @@ class BaseTask:
         yield self.request('https://api.ipify.org/')
 
     async def after_start_worker(self):
+        await self.close_request()
+
+    async def before_start_worker(self):
         pass
 
     async def process_async_callback(self, callback_result: AsyncGeneratorType, response):
@@ -44,6 +47,7 @@ class BaseTask:
         work_name = self.__class__.__name__
         while True:
             try:
+                await self.before_start_worker()
                 self.logger.info(f'start {work_name}.')
                 worker_tasks = []
                 async for item in self.process_start_urls():
@@ -62,7 +66,6 @@ class BaseTask:
                                 await self.process_async_callback(callback_result, response)
                         else:
                             self.logger.error(f'[{work_name}] <Error: {task_result}>')
-                    await self.close_request()
                 await self.after_start_worker()
                 self.logger.info(f'[{work_name}]: Wait {sleep} seconds.')
                 await asyncio.sleep(sleep)

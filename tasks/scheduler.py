@@ -14,7 +14,6 @@ class Scheduler:
 
     @classmethod
     async def run(cls, app: Sanic):
-        validate_session = app.ctx.request_session
         logger = logging.getLogger('sanic.root')
 
         # 获取ip
@@ -23,7 +22,7 @@ class Scheduler:
         logger.debug(fetch_ip_task)
     
         # 验证ip
-        validate_ip_task = app.add_task(ValidateIpTask.run(validate_session, app.config.VALIDATE_PROXY_TIME))
+        validate_ip_task = app.add_task(ValidateIpTask.run(None, app.config.VALIDATE_PROXY_TIME))
         logger.debug(validate_ip_task)
 
         # 删除验证失败

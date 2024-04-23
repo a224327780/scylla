@@ -8,6 +8,15 @@ from utils.common import get_bj_date, get_uptime
 class ValidateIpTask(BaseTask):
     concurrency = 20
 
+    async def before_start_worker(self):
+        from aiohttp import ClientSession
+        from aiosocksy.connector import ProxyConnector, ProxyClientRequest
+        self.request_session = ClientSession(connector=ProxyConnector(), request_class=ProxyClientRequest)
+
+    async def after_start_worker(self):
+        if self.request_session:
+            await self.request_session.close()
+
     async def process_start_urls(self):
         sort = [('last_time', 1), ('status', 1)]
         cond = {'fail_count': {'$lt': 2}}

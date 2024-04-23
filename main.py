@@ -52,9 +52,6 @@ async def catch_anything(request, exception):
 
 @app.listener('before_server_start')
 async def setup_db(_app: Sanic, loop) -> None:
-    from aiohttp import ClientSession
-    from aiosocksy.connector import ProxyConnector, ProxyClientRequest
-    _app.ctx.request_session = ClientSession(connector=ProxyConnector(), request_class=ProxyClientRequest, loop=loop)
     _app.ctx.redis = await from_url(config.REDIS_URI, decode_responses=True)
     DB.init_db(loop, 'db1', 'scylla')
 
