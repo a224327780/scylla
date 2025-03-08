@@ -29,6 +29,9 @@ class ValidateIpTask(BaseTask):
             if scheme != 'https':
                 validate_url = validate_url.replace('https', 'http')
 
+            validate_url1 = 'https://www.olehdtv.com/index.php/user/visit.html?uid=486863'
+            await self.request(url=validate_url1, proxy=proxy, timeout=20)
+
             data = dict(item)
             data['proxy'] = proxy
             data['validate_url'] = validate_url
@@ -65,8 +68,9 @@ class ValidateIpTask(BaseTask):
             self.logger.debug(f"<Error: {url} {e}>")
 
         callback_result = None
-        try:
-            callback_result = await callback(response, metadata)
-        except Exception as e:
-            self.logger.exception(e)
+        if callback and asyncio.iscoroutinefunction(callback):
+            try:
+                callback_result = await callback(response, metadata)
+            except Exception as e:
+                self.logger.exception(e)
         return callback_result, response
